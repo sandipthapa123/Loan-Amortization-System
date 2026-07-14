@@ -12,6 +12,7 @@ import { v4 as uuidv4 } from 'uuid';
 import toast from 'react-hot-toast';
 
 import { copyTableToClipboard } from '@/lib/utils';
+import { useAppStore } from '@/store/useAppStore';
 
 interface PaymentsTableProps {
   loanId: string;
@@ -120,12 +121,19 @@ export function PaymentsTable({ loanId, payments }: PaymentsTableProps) {
     toast.success('Payment duplicated');
   };
 
+  const loan = useAppStore(state => state.loans.find(l => l.id === loanId));
+  const defaultPolicy = loan?.allocationPolicy || 'INTEREST_FIRST';
+
   const getPolicyLabel = (policy: string | undefined) => {
-    switch (policy) {
-      case 'INTEREST_FIRST': return 'Interest First';
-      case 'PRINCIPAL_FIRST': return 'Principal First';
-      case 'MANUAL': return 'Manual';
-      default: return 'Loan Default';
+    const actualPolicy = (!policy || policy === 'LOAN_DEFAULT') ? defaultPolicy : policy;
+    const suffix = (!policy || policy === 'LOAN_DEFAULT') ? ' (Loan Default)' : '';
+    
+    switch (actualPolicy) {
+      case 'INTEREST_FIRST': return 'Interest First' + suffix;
+      case 'PRINCIPAL_FIRST': return 'Principal First' + suffix;
+      case 'PROPORTIONAL': return 'Proportional' + suffix;
+      case 'MANUAL': return 'Manual' + suffix;
+      default: return 'Interest First' + suffix;
     }
   };
 
