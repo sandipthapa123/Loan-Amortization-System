@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { DateCalculationService } from '@/services/DateCalculationService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFoo
 import { PaymentsTable } from '@/components/PaymentsTable';
 import { LoanFinancialSummaryTable } from '@/components/LoanFinancialSummaryTable';
 import { Button } from '@/components/ui/button';
-import { Copy } from 'lucide-react';
+import { Copy, TableProperties } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import { copyTableToClipboard } from '@/lib/utils';
@@ -16,6 +16,8 @@ import { PolicySwitch } from '@/components/PolicySwitch';
 export function Amortization() {
   const { activeLoanId, setActiveLoanId, activeLoan, schedule, loans, payments } = useAppStore();
   const loanPayments = activeLoan ? payments.filter(p => p.loanId === activeLoan.id) : [];
+  
+  const [isDetailedView, setIsDetailedView] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -55,27 +57,36 @@ export function Amortization() {
           <PaymentsTable loanId={activeLoan.id} payments={loanPayments} />
           
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between border-b pb-4 mb-4">
               <CardTitle>Schedule Ledger</CardTitle>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setIsDetailedView(!isDetailedView)}
+                className="ml-auto"
+              >
+                <TableProperties className="mr-2 h-4 w-4" />
+                {isDetailedView ? "Show Brief View" : "Show Detailed View"}
+              </Button>
             </CardHeader>
             <CardContent className="overflow-auto max-h-[600px]">
               <Table id="amortization-schedule-table">
                 <TableHeader>
                   <TableRow>
-                    <TableHead>No.</TableHead>
-                    <TableHead>From Date (AD)</TableHead>
-                    <TableHead>From Date (BS)</TableHead>
-                    <TableHead>To Date (AD)</TableHead>
-                    <TableHead>To Date (BS)</TableHead>
-                    <TableHead>Days</TableHead>
-                    <TableHead>Policy Used</TableHead>
+                    {isDetailedView && <TableHead>No.</TableHead>}
+                    {isDetailedView && <TableHead>From Date (AD)</TableHead>}
+                    {isDetailedView && <TableHead>From Date (BS)</TableHead>}
+                    {isDetailedView && <TableHead>To Date (AD)</TableHead>}
+                    <TableHead>{isDetailedView ? 'To Date (BS)' : 'Date (BS)'}</TableHead>
+                    {isDetailedView && <TableHead>Days</TableHead>}
+                    {isDetailedView && <TableHead>Policy Used</TableHead>}
                     <TableHead className="text-right">Opening</TableHead>
-                    <TableHead className="text-right">Interest Formula</TableHead>
+                    {isDetailedView && <TableHead className="text-right">Interest Formula</TableHead>}
                     <TableHead className="text-right">Accrued Interest</TableHead>
                     <TableHead className="text-right">Payment</TableHead>
                     <TableHead className="text-right">Interest Paid</TableHead>
                     <TableHead className="text-right">Principal Paid</TableHead>
-                    <TableHead className="text-right">Unpaid Interest Bucket</TableHead>
+                    {isDetailedView && <TableHead className="text-right">Unpaid Interest Bucket</TableHead>}
                     <TableHead className="text-right">Closing Principal</TableHead>
                     <TableHead className="text-right">Total Outstanding</TableHead>
                   </TableRow>
@@ -91,20 +102,20 @@ export function Amortization() {
 
                     return (
                       <TableRow key={row.rowNumber}>
-                        <TableCell>{row.rowNumber}</TableCell>
-                        <TableCell className="text-xs whitespace-nowrap">{row.fromDate}</TableCell>
-                        <TableCell className="text-xs whitespace-nowrap">{DateCalculationService.convertADtoBS(row.fromDate)}</TableCell>
-                        <TableCell className="text-xs whitespace-nowrap">{row.toDate}</TableCell>
+                        {isDetailedView && <TableCell>{row.rowNumber}</TableCell>}
+                        {isDetailedView && <TableCell className="text-xs whitespace-nowrap">{row.fromDate}</TableCell>}
+                        {isDetailedView && <TableCell className="text-xs whitespace-nowrap">{DateCalculationService.convertADtoBS(row.fromDate)}</TableCell>}
+                        {isDetailedView && <TableCell className="text-xs whitespace-nowrap">{row.toDate}</TableCell>}
                         <TableCell className="text-xs whitespace-nowrap">{DateCalculationService.convertADtoBS(row.toDate)}</TableCell>
-                        <TableCell>{row.days}</TableCell>
-                        <TableCell className="text-xs text-muted-foreground">{policyLabel}</TableCell>
+                        {isDetailedView && <TableCell>{row.days}</TableCell>}
+                        {isDetailedView && <TableCell className="text-xs text-muted-foreground">{policyLabel}</TableCell>}
                         <TableCell className="text-right">{row.openingPrincipal.toFixed(2)}</TableCell>
-                        <TableCell className="text-right text-xs text-muted-foreground whitespace-nowrap">{row.interestFormula}</TableCell>
+                        {isDetailedView && <TableCell className="text-right text-xs text-muted-foreground whitespace-nowrap">{row.interestFormula}</TableCell>}
                         <TableCell className="text-right">{row.interest.toFixed(2)}</TableCell>
                         <TableCell className="text-right">{row.payment.toFixed(2)}</TableCell>
                         <TableCell className="text-right">{row.interestPaid.toFixed(2)}</TableCell>
                         <TableCell className="text-right">{row.principalPaid.toFixed(2)}</TableCell>
-                        <TableCell className="text-right text-destructive">{row.unpaidInterestBucket.toFixed(2)}</TableCell>
+                        {isDetailedView && <TableCell className="text-right text-destructive">{row.unpaidInterestBucket.toFixed(2)}</TableCell>}
                         <TableCell className="text-right">{row.closingPrincipal.toFixed(2)}</TableCell>
                         <TableCell className="text-right font-semibold">{remainingBalance.toFixed(2)}</TableCell>
                       </TableRow>
@@ -112,7 +123,7 @@ export function Amortization() {
                   })}
                   {schedule.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={16} className="text-center text-muted-foreground py-8">
+                      <TableCell colSpan={isDetailedView ? 16 : 8} className="text-center text-muted-foreground py-8">
                         No payments recorded yet. Add payments to generate schedule.
                       </TableCell>
                     </TableRow>
@@ -121,7 +132,7 @@ export function Amortization() {
                 {schedule.length > 0 && (
                   <TableFooter>
                     <TableRow>
-                      <TableCell colSpan={9} className="text-right font-bold">Total</TableCell>
+                      <TableCell colSpan={isDetailedView ? 9 : 2} className="text-right font-bold">Total</TableCell>
                       <TableCell className="text-right font-bold">
                         {schedule.reduce((sum, row) => sum + row.interest.toNumber(), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </TableCell>
@@ -134,7 +145,7 @@ export function Amortization() {
                       <TableCell className="text-right font-bold">
                         {schedule.reduce((sum, row) => sum + row.principalPaid.toNumber(), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </TableCell>
-                      <TableCell colSpan={3}></TableCell>
+                      <TableCell colSpan={isDetailedView ? 3 : 2}></TableCell>
                     </TableRow>
                   </TableFooter>
                 )}
