@@ -1,8 +1,8 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DualDatePicker } from '@/components/DualDatePicker';
-import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
-import { Copy, Info } from 'lucide-react';
+import { Table, TableBody, TableCell, TableRow, TableHeader, TableHead } from '@/components/ui/table';
+import { Copy } from 'lucide-react';
 import { format } from 'date-fns';
 import { LoanCalculator } from '@/services/LoanCalculator';
 import { AmortizationRow } from '@/services/LoanCalculator';
@@ -39,24 +39,20 @@ export function LoanFinancialSummaryTable({ activeLoan, schedule }: LoanFinancia
   }, [reportDate, activeLoan]);
 
   const summaryRows = financialSummary ? [
-    { field: 'Original Principal', value: financialSummary.originalPrincipal.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), tooltip: 'Initial principal entered when the loan was created' },
-    { field: 'Current Principal', value: financialSummary.currentPrincipal.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), tooltip: 'Current outstanding principal after all principal repayments' },
-    { field: 'Principal Repaid', value: financialSummary.principalRepaid.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), tooltip: 'Total principal repaid' },
-    { field: 'Principal Remaining', value: financialSummary.principalRemaining.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), tooltip: 'Remaining principal (Original Principal − Principal Repaid)' },
-    { field: 'Interest Accrued', value: financialSummary.interestAccrued.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), tooltip: 'Total interest accrued to the selected report date' },
-    { field: 'Total Loan Value', value: financialSummary.totalLoanValue.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), tooltip: 'Original Principal + Total projected interest from Issue Date to Due Date' },
-    { field: 'Interest Paid', value: financialSummary.interestPaid.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), tooltip: 'Total interest paid' },
-    { field: 'Interest Outstanding', value: financialSummary.interestOutstanding.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), tooltip: 'Unpaid interest (Interest Accrued − Interest Paid)' },
-    { field: 'Total Payments Received', value: financialSummary.totalPaymentsReceived.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), tooltip: 'Sum of all payments received regardless of allocation' },
-    { field: 'Total Principal Payments', value: financialSummary.totalPrincipalPayments.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), tooltip: 'Total payments applied to principal' },
-    { field: 'Total Interest Payments', value: financialSummary.totalInterestPayments.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), tooltip: 'Total payments applied to interest' },
-    { field: 'Outstanding Balance', value: financialSummary.outstandingBalance.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), tooltip: 'Remaining balance (Principal Remaining + Interest Outstanding)' },
-    { field: 'Total Amount Due (Report Date)', value: financialSummary.totalAmountDue.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), tooltip: 'Amount payable on the selected report date' },
-    { field: 'Accrued Interest Since Last Payment', value: financialSummary.accruedInterestSinceLastPayment.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), tooltip: 'Interest accumulated after the most recent payment up to the selected report date' },
-    { field: 'Settlement Amount Today', value: financialSummary.settlementAmountToday.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), tooltip: 'Amount required to completely settle the loan today' },
-    { field: 'Loan Progress (%)', value: `${financialSummary.loanProgressPercentage.toFixed(2)}%`, tooltip: 'Percentage of principal repaid' },
-    { field: 'Loan Age', value: financialSummary.loanAge, tooltip: 'Time elapsed since the issue date' },
-    { field: 'Remaining Loan Term', value: financialSummary.remainingLoanTerm, tooltip: 'Time remaining until the due date' },
+    { field: 'Original Principal', value: financialSummary.originalPrincipal.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), remarks: 'Initial principal entered when the loan was created' },
+    { field: 'Current Principal', value: financialSummary.currentPrincipal.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), remarks: 'Current outstanding principal after all principal repayments' },
+    { field: 'Principal Repaid', value: financialSummary.principalRepaid.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), remarks: 'Total principal repaid' },
+    { field: 'Interest Accrued', value: financialSummary.interestAccrued.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), remarks: 'Total interest accrued to the selected report date' },
+    { field: 'Total Loan Value', value: financialSummary.totalLoanValue.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), remarks: 'Original Principal + Total projected interest from Issue Date to Due Date' },
+    { field: 'Interest Paid', value: financialSummary.interestPaid.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), remarks: 'Total interest paid' },
+    { field: 'Interest Outstanding', value: financialSummary.interestOutstanding.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), remarks: 'Unpaid interest (Interest Accrued − Interest Paid)' },
+    { field: 'Total Payments Received', value: financialSummary.totalPaymentsReceived.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), remarks: 'Sum of all payments received regardless of allocation' },
+    { field: 'Outstanding Balance', value: financialSummary.outstandingBalance.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), remarks: 'Remaining balance (Current Principal + Interest Outstanding)' },
+    { field: 'Accrued Interest Since Last Payment', value: financialSummary.accruedInterestSinceLastPayment.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), remarks: 'Interest accumulated after the most recent payment up to the selected report date' },
+    { field: 'Settlement Amount Today', value: financialSummary.settlementAmountToday.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), remarks: 'Total paying requirements minus already total paid.' },
+    { field: 'Loan Progress (%)', value: `${financialSummary.loanProgressPercentage.toFixed(2)}%`, remarks: 'Percentage of principal repaid' },
+    { field: 'Loan Age', value: financialSummary.loanAge, remarks: 'Time elapsed since the issue date' },
+    { field: 'Remaining Loan Term', value: financialSummary.remainingLoanTerm, remarks: 'Time remaining until the due date' },
   ] : [];
 
   if (!activeLoan || !financialSummary) return null;
@@ -83,18 +79,21 @@ export function LoanFinancialSummaryTable({ activeLoan, schedule }: LoanFinancia
         <CardContent>
           <div className="border rounded-md overflow-hidden bg-background">
             <Table id="financial-summary-table">
+              <TableHeader>
+                <TableRow className="bg-muted/50">
+                  <TableHead className="w-1/3">Field</TableHead>
+                  <TableHead className="w-1/4">Value</TableHead>
+                  <TableHead>Remarks</TableHead>
+                </TableRow>
+              </TableHeader>
               <TableBody>
                 {summaryRows.map((row, i) => (
                   <TableRow key={i} className="hover:bg-muted/30">
-                    <TableCell className="font-medium bg-muted/20 w-1/2 border-r">
-                      <div className="flex items-center gap-2">
-                        {row.field}
-                        <span title={row.tooltip} aria-label={row.tooltip}>
-                          <Info className="h-4 w-4 text-muted-foreground cursor-help" aria-hidden="true" />
-                        </span>
-                      </div>
+                    <TableCell className="font-medium bg-muted/20 border-r">
+                      {row.field}
                     </TableCell>
-                    <TableCell className="font-semibold">{row.value}</TableCell>
+                    <TableCell className="font-semibold whitespace-nowrap">{row.value}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{row.remarks}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
