@@ -80,12 +80,26 @@ export class LoanCalculator {
       let interestPaid = new Decimal(0);
       let principalPaid = new Decimal(0);
 
-      if (effectivePolicy === 'INTEREST_FIRST' || effectivePolicy === 'PROPORTIONAL') {
+      if (effectivePolicy === 'INTEREST_FIRST') {
         interestPaid = Decimal.min(totalInterestDue, paymentAmount);
         principalPaid = paymentAmount.minus(interestPaid);
       } else if (effectivePolicy === 'PRINCIPAL_FIRST') {
         principalPaid = Decimal.min(currentPrincipal, paymentAmount);
-        interestPaid = paymentAmount.minus(principalPaid);
+        let remainingPayment = paymentAmount.minus(principalPaid);
+        interestPaid = Decimal.min(totalInterestDue, remainingPayment);
+        remainingPayment = remainingPayment.minus(interestPaid);
+        principalPaid = principalPaid.plus(remainingPayment);
+      } else if (effectivePolicy === 'PROPORTIONAL') {
+        const totalDue = totalInterestDue.plus(currentPrincipal);
+        if (totalDue.greaterThan(0)) {
+          const interestRatio = totalInterestDue.dividedBy(totalDue);
+          const principalRatio = currentPrincipal.dividedBy(totalDue);
+          interestPaid = paymentAmount.times(interestRatio);
+          principalPaid = paymentAmount.times(principalRatio);
+        } else {
+          principalPaid = paymentAmount;
+          interestPaid = new Decimal(0);
+        }
       } else if (effectivePolicy === 'MANUAL') {
         interestPaid = new Decimal(payment?.manualInterestPaid || 0);
         principalPaid = new Decimal(payment?.manualPrincipalPaid || 0);
@@ -155,25 +169,46 @@ export class LoanCalculator {
   ): LoanFinancialSummary {
     const originalPrincipal = new Decimal(loan.principal);
     
-    // Sums from the schedule
-    const principalRepaid = schedule.reduce((sum, row) => sum.plus(row.principalPaid), new Decimal(0));
-    const interestPaid = schedule.reduce((sum, row) => sum.plus(row.interestPaid), new Decimal(0));
-    const totalPaymentsReceived = schedule.reduce((sum, row) => sum.plus(row.payment), new Decimal(0));
-    const scheduleInterestAccrued = schedule.reduce((sum, row) => sum.plus(row.interest), new Decimal(0));
-
-    // Determine the last date processed in the schedule
+    let principalRepaid = new Decimal(0);
+    let interestPaid = new Decimal(0);
+    let totalPaymentsReceived = new Decimal(0);
+    let scheduleInterestAccrued = new Decimal(0);
+    
     let lastProcessedDate = loan.issueDate;
     let currentPrincipal = originalPrincipal;
     let scheduleUnpaidInterest = new Decimal(0);
 
-    if (schedule.length > 0) {
-      const lastRow = schedule[schedule.length - 1];
-      lastProcessedDate = lastRow.toDate;
-      currentPrincipal = lastRow.closingPrincipal;
-      scheduleUnpaidInterest = lastRow.unpaidInterestBucket;
+    const reportDateTime = new Date(reportDate).getTime();
+
+    for (const row of schedule) {
+      const fromDateTime = new Date(row.fromDate).getTime();
+      const toDateTime = new Date(row.toDate).getTime();
+
+      if (toDateTime <= reportDateTime) {
+        principalRepaid = principalRepaid.plus(row.principalPaid);
+        interestPaid = interestPaid.plus(row.interestPaid);
+        totalPaymentsReceived = totalPaymentsReceived.plus(row.payment);
+        scheduleInterestAccrued = scheduleInterestAccrued.plus(row.interest);
+        
+        lastProcessedDate = row.toDate;
+        currentPrincipal = row.closingPrincipal;
+        scheduleUnpaidInterest = row.unpaidInterestBucket;
+      } else if (fromDateTime < reportDateTime) {
+        // Row crosses the report date. Accrue prorated interest up to report date.
+        const days = DateService.getDaysDifference(row.fromDate, reportDate);
+        const rate = new Decimal(loan.interestRate).dividedBy(100);
+        const yearFraction = new Decimal(DateService.getYearFraction(days, loan.dayCountBasis, new Date(row.fromDate).getFullYear()));
+        const proratedInterest = row.openingPrincipal.times(rate).times(yearFraction);
+        
+        scheduleInterestAccrued = scheduleInterestAccrued.plus(proratedInterest);
+        scheduleUnpaidInterest = scheduleUnpaidInterest.plus(proratedInterest);
+        lastProcessedDate = reportDate;
+        break;
+      } else {
+        break; // Future row
+      }
     }
 
-    // Calculate accrued interest since last payment up to the report date
     let accruedInterestSinceLastPayment = new Decimal(0);
     if (new Date(reportDate).getTime() > new Date(lastProcessedDate).getTime() && currentPrincipal.greaterThan(0)) {
       const days = DateService.getDaysDifference(lastProcessedDate, reportDate);

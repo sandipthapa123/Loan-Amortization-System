@@ -42,7 +42,7 @@ export function Reports() {
         <CardContent className="space-y-6">
           <div className="w-full md:w-1/2">
             <Select value={activeLoanId || ''} onValueChange={setActiveLoanId}>
-              <SelectTrigger>
+              <SelectTrigger aria-label="Select Loan to Export">
                 <SelectValue placeholder="Select Loan" />
               </SelectTrigger>
               <SelectContent>
@@ -56,13 +56,13 @@ export function Reports() {
           </div>
 
           <div className="flex flex-wrap gap-4">
-            <Button onClick={handleExportPDF} disabled={!activeLoan || schedule.length === 0} className="w-40">
+            <Button onClick={handleExportPDF} disabled={!activeLoan || schedule.length === 0} className="w-40" aria-label="Export to PDF">
               <FileText className="mr-2 h-4 w-4" /> PDF
             </Button>
-            <Button onClick={handleExportExcel} disabled={!activeLoan || schedule.length === 0} variant="outline" className="w-40">
+            <Button onClick={handleExportExcel} disabled={!activeLoan || schedule.length === 0} variant="outline" className="w-40" aria-label="Export to Excel">
               <FileSpreadsheet className="mr-2 h-4 w-4 text-green-600" /> Excel
             </Button>
-            <Button onClick={handleExportCSV} disabled={!activeLoan || schedule.length === 0} variant="outline" className="w-40">
+            <Button onClick={handleExportCSV} disabled={!activeLoan || schedule.length === 0} variant="outline" className="w-40" aria-label="Export to CSV">
               <FileDown className="mr-2 h-4 w-4" /> CSV
             </Button>
           </div>
