@@ -40,8 +40,8 @@ export function LoanFinancialSummaryTable({ activeLoan, schedule }: LoanFinancia
 
   const summaryRows = financialSummary ? [
     { field: 'Original Principal', value: financialSummary.originalPrincipal.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), remarks: 'Initial principal entered when the loan was created' },
-    { field: 'Current Principal', value: financialSummary.currentPrincipal.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), remarks: 'Current outstanding principal after all principal repayments' },
     { field: 'Principal Repaid', value: financialSummary.principalRepaid.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), remarks: 'Total principal repaid' },
+    { field: 'Current Principal', value: financialSummary.currentPrincipal.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), remarks: 'Current outstanding principal after all principal repayments' },
     { field: 'Interest Accrued', value: financialSummary.interestAccrued.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), remarks: 'Total interest accrued to the selected report date' },
     { field: 'Total Loan Value', value: financialSummary.totalLoanValue.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), remarks: 'Original Principal + Total projected interest from Issue Date to Due Date' },
     { field: 'Interest Paid', value: financialSummary.interestPaid.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), remarks: 'Total interest paid' },
