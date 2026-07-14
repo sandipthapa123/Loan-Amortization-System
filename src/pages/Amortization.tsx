@@ -17,12 +17,28 @@ export function Amortization() {
   const handleCopyTable = (tableId: string) => {
     const el = document.getElementById(tableId);
     if (el) {
-      const rows = Array.from(el.querySelectorAll('tr'));
-      const tsv = rows.map(row => {
-        const cells = Array.from(row.querySelectorAll('th, td'));
-        return cells.map(cell => cell.textContent?.trim().replace(/\s+/g, ' ')).join('\t');
-      }).join('\n');
-      navigator.clipboard.writeText(tsv).then(() => toast.success('Schedule copied to clipboard!'));
+      try {
+        const html = el.outerHTML;
+        const rows = Array.from(el.querySelectorAll('tr'));
+        const tsv = rows.map(row => {
+          const cells = Array.from(row.querySelectorAll('th, td'));
+          return cells.map(cell => cell.textContent?.trim().replace(/\s+/g, ' ')).join('\t');
+        }).join('\n');
+        
+        const clipboardItem = new ClipboardItem({
+          'text/html': new Blob([html], { type: 'text/html' }),
+          'text/plain': new Blob([tsv], { type: 'text/plain' })
+        });
+        navigator.clipboard.write([clipboardItem]).then(() => toast.success('Table copied to clipboard!'));
+      } catch (err) {
+        const range = document.createRange();
+        range.selectNode(el);
+        window.getSelection()?.removeAllRanges();
+        window.getSelection()?.addRange(range);
+        document.execCommand('copy');
+        window.getSelection()?.removeAllRanges();
+        toast.success('Table copied to clipboard!');
+      }
     }
   };
 
