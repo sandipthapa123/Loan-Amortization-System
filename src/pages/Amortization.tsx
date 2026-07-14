@@ -10,37 +10,11 @@ import { Button } from '@/components/ui/button';
 import { Copy } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+import { copyTableToClipboard } from '@/lib/utils';
+
 export function Amortization() {
   const { activeLoanId, setActiveLoanId, activeLoan, schedule, loans, payments } = useAppStore();
   const loanPayments = activeLoan ? payments.filter(p => p.loanId === activeLoan.id) : [];
-
-  const handleCopyTable = (tableId: string) => {
-    const el = document.getElementById(tableId);
-    if (el) {
-      try {
-        const html = el.outerHTML;
-        const rows = Array.from(el.querySelectorAll('tr'));
-        const tsv = rows.map(row => {
-          const cells = Array.from(row.querySelectorAll('th, td'));
-          return cells.map(cell => cell.textContent?.trim().replace(/\s+/g, ' ')).join('\t');
-        }).join('\n');
-        
-        const clipboardItem = new ClipboardItem({
-          'text/html': new Blob([html], { type: 'text/html' }),
-          'text/plain': new Blob([tsv], { type: 'text/plain' })
-        });
-        navigator.clipboard.write([clipboardItem]).then(() => toast.success('Table copied to clipboard!'));
-      } catch (err) {
-        const range = document.createRange();
-        range.selectNode(el);
-        window.getSelection()?.removeAllRanges();
-        window.getSelection()?.addRange(range);
-        document.execCommand('copy');
-        window.getSelection()?.removeAllRanges();
-        toast.success('Table copied to clipboard!');
-      }
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -142,7 +116,7 @@ export function Amortization() {
             </CardContent>
             {schedule.length > 0 && (
               <div className="flex justify-end p-4 pt-0 border-t mt-4">
-                <Button variant="outline" size="sm" onClick={() => handleCopyTable('amortization-schedule-table')}>
+                <Button variant="outline" size="sm" onClick={() => copyTableToClipboard('amortization-schedule-table')}>
                   <Copy className="mr-2 h-4 w-4" /> Copy Schedule
                 </Button>
               </div>
