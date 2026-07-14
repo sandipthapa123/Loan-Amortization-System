@@ -6,10 +6,25 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PaymentsTable } from '@/components/PaymentsTable';
 import { LoanFinancialSummaryTable } from '@/components/LoanFinancialSummaryTable';
+import { Button } from '@/components/ui/button';
+import { Copy } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export function Amortization() {
   const { activeLoanId, setActiveLoanId, activeLoan, schedule, loans, payments } = useAppStore();
   const loanPayments = activeLoan ? payments.filter(p => p.loanId === activeLoan.id) : [];
+
+  const handleCopyTable = (tableId: string) => {
+    const el = document.getElementById(tableId);
+    if (el) {
+      const rows = Array.from(el.querySelectorAll('tr'));
+      const tsv = rows.map(row => {
+        const cells = Array.from(row.querySelectorAll('th, td'));
+        return cells.map(cell => cell.textContent?.trim().replace(/\s+/g, ' ')).join('\t');
+      }).join('\n');
+      navigator.clipboard.writeText(tsv).then(() => toast.success('Schedule copied to clipboard!'));
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -48,7 +63,7 @@ export function Amortization() {
               <CardTitle>Schedule Ledger</CardTitle>
             </CardHeader>
             <CardContent className="overflow-auto max-h-[600px]">
-              <Table>
+              <Table id="amortization-schedule-table">
                 <TableHeader>
                   <TableRow>
                     <TableHead>No.</TableHead>
@@ -109,6 +124,13 @@ export function Amortization() {
                 </TableBody>
               </Table>
             </CardContent>
+            {schedule.length > 0 && (
+              <div className="flex justify-end p-4 pt-0 border-t mt-4">
+                <Button variant="outline" size="sm" onClick={() => handleCopyTable('amortization-schedule-table')}>
+                  <Copy className="mr-2 h-4 w-4" /> Copy Schedule
+                </Button>
+              </div>
+            )}
           </Card>
         </div>
       )}

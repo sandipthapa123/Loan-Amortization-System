@@ -2,10 +2,12 @@ import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DualDatePicker } from '@/components/DualDatePicker';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
-import { Info } from 'lucide-react';
+import { Copy, Info } from 'lucide-react';
 import { format } from 'date-fns';
 import { LoanCalculator } from '@/services/LoanCalculator';
 import { AmortizationRow } from '@/services/LoanCalculator';
+import { Button } from './ui/button';
+import toast from 'react-hot-toast';
 
 interface LoanFinancialSummaryTableProps {
   activeLoan: any;
@@ -54,6 +56,18 @@ export function LoanFinancialSummaryTable({ activeLoan, schedule }: LoanFinancia
     { field: 'Remaining Loan Term', value: financialSummary.remainingLoanTerm, tooltip: 'Time remaining until the due date' },
   ] : [];
 
+  const handleCopyTable = () => {
+    const el = document.getElementById('financial-summary-table');
+    if (el) {
+      const rows = Array.from(el.querySelectorAll('tr'));
+      const tsv = rows.map(row => {
+        const cells = Array.from(row.querySelectorAll('th, td'));
+        return cells.map(cell => cell.textContent?.trim().replace(/\s+/g, ' ')).join('\t');
+      }).join('\n');
+      navigator.clipboard.writeText(tsv).then(() => toast.success('Table copied to clipboard!'));
+    }
+  };
+
   if (!activeLoan || !financialSummary) return null;
 
   return (
@@ -77,7 +91,7 @@ export function LoanFinancialSummaryTable({ activeLoan, schedule }: LoanFinancia
         </CardHeader>
         <CardContent>
           <div className="border rounded-md overflow-hidden bg-background">
-            <Table>
+            <Table id="financial-summary-table">
               <TableBody>
                 {summaryRows.map((row, i) => (
                   <TableRow key={i} className="hover:bg-muted/30">
@@ -94,6 +108,11 @@ export function LoanFinancialSummaryTable({ activeLoan, schedule }: LoanFinancia
                 ))}
               </TableBody>
             </Table>
+          </div>
+          <div className="flex justify-end mt-4">
+            <Button variant="outline" size="sm" onClick={handleCopyTable}>
+              <Copy className="mr-2 h-4 w-4" /> Copy Table
+            </Button>
           </div>
         </CardContent>
       </Card>

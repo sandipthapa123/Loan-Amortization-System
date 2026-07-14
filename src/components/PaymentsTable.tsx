@@ -127,6 +127,21 @@ export function PaymentsTable({ loanId, payments }: PaymentsTableProps) {
     }
   };
 
+  const sortedPayments = [...payments].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  const handleCopyTable = () => {
+    const el = document.getElementById('payments-table');
+    if (el) {
+      const rows = Array.from(el.querySelectorAll('tr'));
+      const tsv = rows.map(row => {
+        const cells = Array.from(row.querySelectorAll('th, td'));
+        // Exclude the 'Actions' column from being copied if desired, but we'll just copy all text
+        return cells.map(cell => cell.textContent?.trim().replace(/\s+/g, ' ')).join('\t');
+      }).join('\n');
+      navigator.clipboard.writeText(tsv).then(() => toast.success('Table copied to clipboard!'));
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -201,7 +216,7 @@ export function PaymentsTable({ loanId, payments }: PaymentsTableProps) {
       </div>
 
       <div className="border rounded-md max-h-[300px] overflow-auto">
-        <Table>
+        <Table id="payments-table">
           <TableHeader>
             <TableRow>
               <TableHead>Date (AD)</TableHead>
@@ -213,7 +228,7 @@ export function PaymentsTable({ loanId, payments }: PaymentsTableProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {payments.map(p => (
+            {sortedPayments.map(p => (
               <TableRow key={p.id}>
                 <TableCell>{p.date}</TableCell>
                 <TableCell>{DateService.convertADtoBS(p.date)}</TableCell>
@@ -236,7 +251,7 @@ export function PaymentsTable({ loanId, payments }: PaymentsTableProps) {
                 </TableCell>
               </TableRow>
             ))}
-            {payments.length === 0 && (
+            {sortedPayments.length === 0 && (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-4 text-muted-foreground">No payments found</TableCell>
               </TableRow>
@@ -244,6 +259,13 @@ export function PaymentsTable({ loanId, payments }: PaymentsTableProps) {
           </TableBody>
         </Table>
       </div>
+      {sortedPayments.length > 0 && (
+        <div className="flex justify-end mt-2">
+          <Button variant="outline" size="sm" onClick={handleCopyTable}>
+            <Copy className="mr-2 h-4 w-4" /> Copy Table
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
