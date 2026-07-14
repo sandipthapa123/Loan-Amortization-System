@@ -38,7 +38,7 @@ export class ExportService {
 
     autoTable(doc, {
       startY: 50,
-      head: [['No', 'From (BS)', 'To (BS)', 'Days', 'Policy', 'Opening', 'Interest', 'Payment', 'Int. Paid', 'Prin. Paid', 'Unpaid Int.', 'Closing']],
+      head: [['No', 'From (BS)', 'To (BS)', 'Days', 'Policy', 'Opening (Rs.)', 'Interest (Rs.)', 'Payment (Rs.)', 'Int. Paid (Rs.)', 'Prin. Paid (Rs.)', 'Unpaid Int. (Rs.)', 'Closing (Rs.)']],
       body: tableData,
       theme: 'grid',
       styles: { fontSize: 8 },
@@ -57,15 +57,15 @@ export class ExportService {
       'To Date (BS)': DateCalculationService.convertADtoBS(row.toDate),
       'Days': row.days,
       'Allocation Policy': row.allocationPolicyUsed,
-      'Opening Principal': row.openingPrincipal.toNumber(),
+      'Opening Principal (Rs.)': row.openingPrincipal.toNumber(),
       'Interest Formula': row.interestFormula,
-      'Accrued Interest': row.interest.toNumber(),
-      'Payment': row.payment.toNumber(),
-      'Interest Paid': row.interestPaid.toNumber(),
-      'Principal Paid': row.principalPaid.toNumber(),
-      'Unpaid Interest Bucket': row.unpaidInterestBucket.toNumber(),
-      'Closing Principal': row.closingPrincipal.toNumber(),
-      'Remaining Balance': row.closingPrincipal.plus(row.unpaidInterestBucket).toNumber()
+      'Accrued Interest (Rs.)': row.interest.toNumber(),
+      'Payment (Rs.)': row.payment.toNumber(),
+      'Interest Paid (Rs.)': row.interestPaid.toNumber(),
+      'Principal Paid (Rs.)': row.principalPaid.toNumber(),
+      'Unpaid Interest Bucket (Rs.)': row.unpaidInterestBucket.toNumber(),
+      'Closing Principal (Rs.)': row.closingPrincipal.toNumber(),
+      'Remaining Balance (Rs.)': row.closingPrincipal.plus(row.unpaidInterestBucket).toNumber()
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(data);
@@ -83,15 +83,15 @@ export class ExportService {
       'To Date (BS)': DateCalculationService.convertADtoBS(row.toDate),
       'Days': row.days,
       'Allocation Policy': row.allocationPolicyUsed,
-      'Opening Principal': row.openingPrincipal.toFixed(2),
+      'Opening Principal (Rs.)': row.openingPrincipal.toFixed(2),
       'Interest Formula': row.interestFormula,
-      'Accrued Interest': row.interest.toFixed(2),
-      'Payment': row.payment.toFixed(2),
-      'Interest Paid': row.interestPaid.toFixed(2),
-      'Principal Paid': row.principalPaid.toFixed(2),
-      'Unpaid Interest Bucket': row.unpaidInterestBucket.toFixed(2),
-      'Closing Principal': row.closingPrincipal.toFixed(2),
-      'Remaining Balance': row.closingPrincipal.plus(row.unpaidInterestBucket).toFixed(2)
+      'Accrued Interest (Rs.)': row.interest.toFixed(2),
+      'Payment (Rs.)': row.payment.toFixed(2),
+      'Interest Paid (Rs.)': row.interestPaid.toFixed(2),
+      'Principal Paid (Rs.)': row.principalPaid.toFixed(2),
+      'Unpaid Interest Bucket (Rs.)': row.unpaidInterestBucket.toFixed(2),
+      'Closing Principal (Rs.)': row.closingPrincipal.toFixed(2),
+      'Remaining Balance (Rs.)': row.closingPrincipal.plus(row.unpaidInterestBucket).toFixed(2)
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(data);

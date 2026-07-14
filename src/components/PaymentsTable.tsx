@@ -224,8 +224,8 @@ export function PaymentsTable({ loanId, payments }: PaymentsTableProps) {
             <TableRow>
               <TableHead>Date (AD)</TableHead>
               <TableHead>Date (BS)</TableHead>
-              <TableHead className="text-right">Amount</TableHead>
-              <TableHead className="text-right">Cumulative Amount</TableHead>
+              <TableHead className="text-right">Amount (Rs.)</TableHead>
+              <TableHead className="text-right">Cumulative Amount (Rs.)</TableHead>
               <TableHead>Policy</TableHead>
               <TableHead>Reference</TableHead>
               <TableHead className="text-right">Actions</TableHead>

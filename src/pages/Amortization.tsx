@@ -80,15 +80,15 @@ export function Amortization() {
                     <TableHead>{isDetailedView ? 'To Date (BS)' : 'Date (BS)'}</TableHead>
                     {isDetailedView && <TableHead>Days</TableHead>}
                     {isDetailedView && <TableHead>Policy Used</TableHead>}
-                    <TableHead className="text-right">Opening</TableHead>
+                    <TableHead className="text-right">Opening (Rs.)</TableHead>
                     {isDetailedView && <TableHead className="text-right">Interest Formula</TableHead>}
-                    <TableHead className="text-right">Accrued Interest</TableHead>
-                    <TableHead className="text-right">Payment</TableHead>
-                    <TableHead className="text-right">Interest Paid</TableHead>
-                    <TableHead className="text-right">Principal Paid</TableHead>
-                    {isDetailedView && <TableHead className="text-right">Unpaid Interest Bucket</TableHead>}
-                    <TableHead className="text-right">Closing Principal</TableHead>
-                    <TableHead className="text-right">Total Outstanding</TableHead>
+                    <TableHead className="text-right">Accrued Interest (Rs.)</TableHead>
+                    <TableHead className="text-right">Payment (Rs.)</TableHead>
+                    <TableHead className="text-right">Interest Paid (Rs.)</TableHead>
+                    <TableHead className="text-right">Principal Paid (Rs.)</TableHead>
+                    {isDetailedView && <TableHead className="text-right">Unpaid Interest Bucket (Rs.)</TableHead>}
+                    <TableHead className="text-right">Closing Principal (Rs.)</TableHead>
+                    <TableHead className="text-right">Total Outstanding (Rs.)</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
