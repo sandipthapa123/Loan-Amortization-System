@@ -190,6 +190,24 @@ export class LoanCalculator {
       ? principalRepaid.dividedBy(originalPrincipal).times(100).toNumber()
       : 0;
 
+    // Calculate Total Loan Value at Due Date
+    let totalProjectedInterest = new Decimal(0);
+    for (const row of schedule) {
+      if (new Date(row.toDate).getTime() <= new Date(loan.dueDate).getTime()) {
+        totalProjectedInterest = totalProjectedInterest.plus(row.interest);
+      } else {
+        if (new Date(row.fromDate).getTime() < new Date(loan.dueDate).getTime()) {
+          const daysToDueDate = DateService.getDaysDifference(row.fromDate, loan.dueDate);
+          const rate = new Decimal(loan.interestRate).dividedBy(100);
+          const yearFrac = new Decimal(DateService.getYearFraction(daysToDueDate, loan.dayCountBasis, new Date(row.fromDate).getFullYear()));
+          const proratedInterest = row.openingPrincipal.times(rate).times(yearFrac);
+          totalProjectedInterest = totalProjectedInterest.plus(proratedInterest);
+        }
+        break;
+      }
+    }
+    const totalLoanValue = originalPrincipal.plus(totalProjectedInterest);
+
     return {
       originalPrincipal,
       currentPrincipal,
@@ -206,6 +224,8 @@ export class LoanCalculator {
       accruedInterestSinceLastPayment,
       settlementAmountToday: outstandingBalance,
       loanProgressPercentage,
+      totalProjectedInterestToDueDate: totalProjectedInterest,
+      totalLoanValue,
       loanAge: DateService.getDuration(loan.issueDate, new Date().toISOString().split('T')[0]),
       remainingLoanTerm: DateService.getDuration(new Date().toISOString().split('T')[0], loan.dueDate)
     };
@@ -228,6 +248,8 @@ export interface LoanFinancialSummary {
   accruedInterestSinceLastPayment: Decimal;
   settlementAmountToday: Decimal;
   loanProgressPercentage: number;
+  totalProjectedInterestToDueDate: Decimal;
+  totalLoanValue: Decimal;
   loanAge: string;
   remainingLoanTerm: string;
 }
