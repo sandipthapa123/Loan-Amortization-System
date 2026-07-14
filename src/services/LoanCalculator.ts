@@ -186,7 +186,9 @@ export class LoanCalculator {
     const interestOutstanding = scheduleUnpaidInterest.plus(accruedInterestSinceLastPayment);
     const principalRemaining = originalPrincipal.minus(principalRepaid); // Should match currentPrincipal
     const outstandingBalance = principalRemaining.plus(interestOutstanding);
-    const loanProgressPercentage = principalRepaid.dividedBy(originalPrincipal).times(100).toNumber();
+    const loanProgressPercentage = originalPrincipal.greaterThan(0)
+      ? principalRepaid.dividedBy(originalPrincipal).times(100).toNumber()
+      : 0;
 
     return {
       originalPrincipal,
