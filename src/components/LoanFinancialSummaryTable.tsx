@@ -3,9 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DualDatePicker } from '@/components/DualDatePicker';
 import { Table, TableBody, TableCell, TableRow, TableHeader, TableHead } from '@/components/ui/table';
 import { Copy } from 'lucide-react';
-import { format } from 'date-fns';
 import { LoanCalculator } from '@/services/LoanCalculator';
 import { AmortizationRow } from '@/services/LoanCalculator';
+import { DateCalculationService } from '@/services/DateCalculationService';
 import { Button } from './ui/button';
 import toast from 'react-hot-toast';
 
@@ -18,7 +18,7 @@ interface LoanFinancialSummaryTableProps {
 
 export function LoanFinancialSummaryTable({ activeLoan, schedule }: LoanFinancialSummaryTableProps) {
   // Report date defaults to today
-  const [reportDate, setReportDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
+  const [reportDate, setReportDate] = useState<string>(DateCalculationService.getTodayAD());
   const prevReportDate = useRef<string>(reportDate);
   const [announceText, setAnnounceText] = useState('');
 

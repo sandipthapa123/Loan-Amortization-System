@@ -28,6 +28,36 @@ interface AppState {
   syncData: (loans: Loan[], payments: Payment[]) => void;
 }
 
+function calculateStoreState(loans: Loan[], payments: Payment[], activeLoanId: string | null) {
+  const activeLoan = loans.find(l => l.id === activeLoanId) || null;
+  const loanPayments = activeLoan ? payments.filter(p => p.loanId === activeLoan.id) : [];
+  const schedule = activeLoan
+    ? LoanCalculator.calculateSchedule(
+        activeLoan.principal,
+        activeLoan.interestRate,
+        activeLoan.issueDate,
+        activeLoan.dueDate,
+        loanPayments.map(p => ({ 
+          id: p.id, 
+          date: p.date, 
+          amount: p.amount,
+          allocationPolicy: p.allocationPolicy,
+          manualInterestPaid: p.manualInterestPaid,
+          manualPrincipalPaid: p.manualPrincipalPaid
+        })),
+        activeLoan.dayCountBasis,
+        activeLoan.allocationPolicy
+      )
+    : [];
+  
+  const totalPrincipal = loans.reduce((acc, loan) => acc + loan.principal, 0);
+  const totalPayments = payments.reduce((acc, payment) => acc + payment.amount, 0);
+  const activeLoans = loans.filter(l => l.status === 'Active').length;
+  const summary = { totalPrincipal, totalPayments, activeLoans };
+
+  return { activeLoan, schedule, summary };
+}
+
 export const useAppStore = create<AppState>()(
   persist(
     (set) => ({
@@ -39,26 +69,7 @@ export const useAppStore = create<AppState>()(
       activeLoanId: null,
       setActiveLoanId: (activeLoanId) => set((state) => {
         // Trigger a re-sync immediately using existing loans/payments
-        const activeLoan = state.loans.find(l => l.id === activeLoanId) || null;
-        const loanPayments = activeLoan ? state.payments.filter(p => p.loanId === activeLoan.id) : [];
-        const schedule = activeLoan
-          ? LoanCalculator.calculateSchedule(
-              activeLoan.principal,
-              activeLoan.interestRate,
-              activeLoan.issueDate,
-              activeLoan.dueDate,
-              loanPayments.map(p => ({ 
-                id: p.id, 
-                date: p.date, 
-                amount: p.amount,
-                allocationPolicy: p.allocationPolicy,
-                manualInterestPaid: p.manualInterestPaid,
-                manualPrincipalPaid: p.manualPrincipalPaid
-              })),
-              activeLoan.dayCountBasis,
-              activeLoan.allocationPolicy
-            )
-          : [];
+        const { activeLoan, schedule } = calculateStoreState(state.loans, state.payments, activeLoanId);
         return { activeLoanId, activeLoan, schedule };
       }),
       
@@ -73,33 +84,7 @@ export const useAppStore = create<AppState>()(
       },
       
       syncData: (loans, payments) => set((state) => {
-        const totalPrincipal = loans.reduce((acc, loan) => acc + loan.principal, 0);
-        const totalPayments = payments.reduce((acc, payment) => acc + payment.amount, 0);
-        const activeLoans = loans.filter(l => l.status === 'Active').length;
-        
-        const summary = { totalPrincipal, totalPayments, activeLoans };
-        
-        const activeLoan = loans.find(l => l.id === state.activeLoanId) || null;
-        const loanPayments = activeLoan ? payments.filter(p => p.loanId === activeLoan.id) : [];
-        const schedule = activeLoan
-          ? LoanCalculator.calculateSchedule(
-              activeLoan.principal,
-              activeLoan.interestRate,
-              activeLoan.issueDate,
-              activeLoan.dueDate,
-              loanPayments.map(p => ({ 
-                id: p.id, 
-                date: p.date, 
-                amount: p.amount,
-                allocationPolicy: p.allocationPolicy,
-                manualInterestPaid: p.manualInterestPaid,
-                manualPrincipalPaid: p.manualPrincipalPaid
-              })),
-              activeLoan.dayCountBasis,
-              activeLoan.allocationPolicy
-            )
-          : [];
-          
+        const { activeLoan, schedule, summary } = calculateStoreState(loans, payments, state.activeLoanId);
         return { loans, payments, summary, activeLoan, schedule };
       }),
     }),

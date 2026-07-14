@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import NepaliDate from 'nepali-date-converter';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { DateCalculationService } from '@/services/DateCalculationService';
 
 interface BSCalendarProps {
   value?: string; // YYYY-MM-DD
@@ -15,28 +15,20 @@ const nepaliMonths = [
 ];
 
 export function BSCalendar({ value, onChange }: BSCalendarProps) {
-  const initialDate = value ? new NepaliDate(value) : new NepaliDate();
-  const [currentYear, setCurrentYear] = useState(initialDate.getYear());
-  const [currentMonth, setCurrentMonth] = useState(initialDate.getMonth()); // 0-11
+  const initialDateParts = DateCalculationService.getBSDateParts(value);
+  const [currentYear, setCurrentYear] = useState(initialDateParts.year);
+  const [currentMonth, setCurrentMonth] = useState(initialDateParts.month); // 0-11
 
   // Update internal state if value prop changes significantly (optional)
   useEffect(() => {
-    if (value) {
-      try {
-        const d = new NepaliDate(value);
-        setCurrentYear(d.getYear());
-        setCurrentMonth(d.getMonth());
-      } catch (e) {
-        // ignore
-      }
+    if (value && DateCalculationService.isValidBS(value)) {
+      const parts = DateCalculationService.getBSDateParts(value);
+      setCurrentYear(parts.year);
+      setCurrentMonth(parts.month);
     }
   }, [value]);
 
-  // @ts-ignore: getDaysInMonth exists at runtime but missing in type definitions
-  const daysInMonth = new NepaliDate(currentYear, currentMonth, 1).getDaysInMonth();
-  // Get day of week for the 1st of the month (0 = Sunday, 1 = Monday)
-  const firstDayJsDate = new NepaliDate(currentYear, currentMonth, 1).toJsDate();
-  const startDayOfWeek = firstDayJsDate.getDay();
+  const { daysInMonth, startDayOfWeek } = DateCalculationService.getBSMonthMetadata(currentYear, currentMonth);
 
   const handlePrevMonth = () => {
     if (currentMonth === 0) {
@@ -58,8 +50,8 @@ export function BSCalendar({ value, onChange }: BSCalendarProps) {
 
   const handleSelect = (day: number) => {
     if (onChange) {
-      const selected = new NepaliDate(currentYear, currentMonth, day);
-      onChange(selected.format('YYYY-MM-DD'));
+      const selected = DateCalculationService.createBSDateStr(currentYear, currentMonth, day);
+      onChange(selected);
     }
   };
 
@@ -87,7 +79,11 @@ export function BSCalendar({ value, onChange }: BSCalendarProps) {
           <div key={`blank-${i}`} className="h-8 w-8" />
         ))}
         {daysArray.map((day) => {
-          const isSelected = value && new NepaliDate(value).getYear() === currentYear && new NepaliDate(value).getMonth() === currentMonth && new NepaliDate(value).getDate() === day;
+          let isSelected = false;
+          if (value && DateCalculationService.isValidBS(value)) {
+            const parts = DateCalculationService.getBSDateParts(value);
+            isSelected = parts.year === currentYear && parts.month === currentMonth && parts.day === day;
+          }
           return (
             <Button
               key={day}

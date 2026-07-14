@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar as CalendarIcon } from 'lucide-react';
-import { format, parse, isValid } from 'date-fns';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -57,7 +56,7 @@ export function DualDatePicker({ value, onChange, label, className }: DualDatePi
 
   const handleAdSelect = (date: Date | undefined) => {
     if (date) {
-      const adStr = format(date, 'yyyy-MM-dd');
+      const adStr = DateCalculationService.formatADDate(date);
       setAdText(adStr);
       setBsText(DateCalculationService.convertADtoBS(adStr));
       onChange?.(adStr);
@@ -96,7 +95,7 @@ export function DualDatePicker({ value, onChange, label, className }: DualDatePi
               <PopoverContent className="w-auto p-0" align="end">
                 <Calendar
                   mode="single"
-                  selected={adText && DateCalculationService.isValidAD(adText) ? parse(adText, 'yyyy-MM-dd', new Date()) : undefined}
+                  selected={adText && DateCalculationService.isValidAD(adText) ? DateCalculationService.parseAD(adText) : undefined}
                   onSelect={handleAdSelect}
                 />
               </PopoverContent>

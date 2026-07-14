@@ -14,6 +14,66 @@ export class DateCalculationService {
   static readonly BOUNDARY_RULE = '[Start Date, End Date)';
 
   /**
+   * Returns today's date safely formatted as YYYY-MM-DD in local time
+   */
+  static getTodayAD(): string {
+    const today = new Date();
+    const y = today.getFullYear();
+    const m = String(today.getMonth() + 1).padStart(2, '0');
+    const d = String(today.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+
+  /**
+   * Parse an AD date string (YYYY-MM-DD) strictly into a local noon Date object to prevent tz shifts
+   */
+  static parseAD(dateStr: string): Date | undefined {
+    if (!this.isValidAD(dateStr)) return undefined;
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return new Date(year, month - 1, day, 12, 0, 0, 0);
+  }
+
+  /**
+   * Format a JS Date object to AD string (YYYY-MM-DD) safely using local time
+   */
+  static formatADDate(date: Date): string {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+
+  /**
+   * Calendar helper: Get BS Date parts
+   */
+  static getBSDateParts(bsDateStr?: string) {
+    try {
+      const d = bsDateStr && this.isValidBS(bsDateStr) ? new NepaliDate(bsDateStr) : new NepaliDate();
+      return { year: d.getYear(), month: d.getMonth(), day: d.getDate() };
+    } catch {
+      const d = new NepaliDate();
+      return { year: d.getYear(), month: d.getMonth(), day: d.getDate() };
+    }
+  }
+
+  /**
+   * Calendar helper: Get days in month and start day of week for a BS year/month
+   */
+  static getBSMonthMetadata(year: number, month: number) {
+    // @ts-ignore: getDaysInMonth exists at runtime
+    const daysInMonth = new NepaliDate(year, month, 1).getDaysInMonth();
+    const startDayOfWeek = new NepaliDate(year, month, 1).toJsDate().getDay();
+    return { daysInMonth, startDayOfWeek };
+  }
+
+  /**
+   * Calendar helper: Create formatted BS date string
+   */
+  static createBSDateStr(year: number, month: number, day: number): string {
+    return new NepaliDate(year, month, day).format('YYYY-MM-DD');
+  }
+
+  /**
    * Converts AD date string (YYYY-MM-DD) to BS date string (YYYY-MM-DD).
    * Uses local date construction to avoid UTC midnight timezone shift.
    */
