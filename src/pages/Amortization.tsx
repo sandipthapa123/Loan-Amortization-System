@@ -3,7 +3,7 @@ import { useAppStore } from '@/store/useAppStore';
 import { DateService } from '@/services/DateService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
 import { PaymentsTable } from '@/components/PaymentsTable';
 import { LoanFinancialSummaryTable } from '@/components/LoanFinancialSummaryTable';
 import { Button } from '@/components/ui/button';
@@ -118,6 +118,26 @@ export function Amortization() {
                     </TableRow>
                   )}
                 </TableBody>
+                {schedule.length > 0 && (
+                  <TableFooter>
+                    <TableRow>
+                      <TableCell colSpan={9} className="text-right font-bold">Total</TableCell>
+                      <TableCell className="text-right font-bold">
+                        {schedule.reduce((sum, row) => sum + row.interest.toNumber(), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </TableCell>
+                      <TableCell className="text-right font-bold">
+                        {schedule.reduce((sum, row) => sum + row.payment.toNumber(), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </TableCell>
+                      <TableCell className="text-right font-bold">
+                        {schedule.reduce((sum, row) => sum + row.interestPaid.toNumber(), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </TableCell>
+                      <TableCell className="text-right font-bold">
+                        {schedule.reduce((sum, row) => sum + row.principalPaid.toNumber(), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </TableCell>
+                      <TableCell colSpan={3}></TableCell>
+                    </TableRow>
+                  </TableFooter>
+                )}
               </Table>
             </CardContent>
             {schedule.length > 0 && (
