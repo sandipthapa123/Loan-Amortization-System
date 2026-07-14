@@ -82,7 +82,7 @@ export function LoanFinancialSummaryTable({ activeLoan, schedule }: LoanFinancia
               <TableHeader>
                 <TableRow className="bg-muted/50">
                   <TableHead className="w-1/3">Field</TableHead>
-                  <TableHead className="w-1/4">Value</TableHead>
+                  <TableHead className="w-1/4">Value (Rs.)</TableHead>
                   <TableHead>Remarks</TableHead>
                 </TableRow>
               </TableHeader>
