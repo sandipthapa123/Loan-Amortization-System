@@ -6,6 +6,7 @@ import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTo
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 import { LoanFinancialSummaryTable } from '@/components/LoanFinancialSummaryTable';
+import { PolicySwitch } from '@/components/PolicySwitch';
 
 export function Dashboard() {
   const { summary, loans, payments, activeLoan, schedule, setActiveLoanId } = useAppStore();
@@ -39,17 +40,20 @@ export function Dashboard() {
         </div>
         
         {loans.length > 0 && (
-          <div className="w-full md:w-64">
-            <Select value={activeLoan?.id || ''} onValueChange={setActiveLoanId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select active loan" />
-              </SelectTrigger>
-              <SelectContent>
-                {loans.map(l => (
-                  <SelectItem key={l.id} value={l.id}>{l.borrower} ({l.loanNumber || 'N/A'})</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
+            <PolicySwitch />
+            <div className="w-full md:w-64">
+              <Select value={activeLoan?.id || ''} onValueChange={setActiveLoanId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select active loan" />
+                </SelectTrigger>
+                <SelectContent>
+                  {loans.map(l => (
+                    <SelectItem key={l.id} value={l.id}>{l.borrower} ({l.loanNumber || 'N/A'})</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         )}
       </div>

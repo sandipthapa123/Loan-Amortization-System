@@ -11,6 +11,7 @@ import { Copy } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import { copyTableToClipboard } from '@/lib/utils';
+import { PolicySwitch } from '@/components/PolicySwitch';
 
 export function Amortization() {
   const { activeLoanId, setActiveLoanId, activeLoan, schedule, loans, payments } = useAppStore();
@@ -18,21 +19,26 @@ export function Amortization() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold tracking-tight">Amortization Schedule</h2>
-        <div className="w-64">
-          <Select value={activeLoanId || ''} onValueChange={setActiveLoanId}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select Loan" />
-            </SelectTrigger>
-            <SelectContent>
-              {loans.map(loan => (
-                <SelectItem key={loan.id} value={loan.id}>
-                  {loan.borrower} - {loan.principal.toLocaleString()}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Amortization Schedule</h2>
+        </div>
+        <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
+          {activeLoan && <PolicySwitch />}
+          <div className="w-full md:w-64">
+            <Select value={activeLoanId || ''} onValueChange={setActiveLoanId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select Loan" />
+              </SelectTrigger>
+              <SelectContent>
+                {loans.map(loan => (
+                  <SelectItem key={loan.id} value={loan.id}>
+                    {loan.borrower} - {loan.principal.toLocaleString()}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
