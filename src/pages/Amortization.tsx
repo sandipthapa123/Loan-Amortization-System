@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PaymentsTable } from '@/components/PaymentsTable';
+import { LoanFinancialSummaryTable } from '@/components/LoanFinancialSummaryTable';
 
 export function Amortization() {
   const { activeLoanId, setActiveLoanId, activeLoan, schedule, loans, payments } = useAppStore();
@@ -38,6 +39,8 @@ export function Amortization() {
         </Card>
       ) : (
         <div className="space-y-6">
+          <LoanFinancialSummaryTable activeLoan={activeLoan} schedule={schedule} />
+          
           <PaymentsTable loanId={activeLoan.id} payments={loanPayments} />
           
           <Card>
