@@ -112,14 +112,7 @@ export function PaymentsTable({ loanId, payments }: PaymentsTableProps) {
     }
   };
 
-  const handleDuplicate = async (p: Payment) => {
-    await db.payments.add({
-      ...p,
-      id: uuidv4(),
-      createdAt: Date.now()
-    });
-    toast.success('Payment duplicated');
-  };
+
 
   const loan = useAppStore(state => state.loans.find(l => l.id === loanId));
   const defaultPolicy = loan?.allocationPolicy || 'INTEREST_FIRST';
@@ -233,9 +226,6 @@ export function PaymentsTable({ loanId, payments }: PaymentsTableProps) {
                 <TableCell className="text-right space-x-2">
                   <Button variant="ghost" size="icon" onClick={() => handleEdit(p)} aria-label="Edit payment">
                     <Edit2 className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => handleDuplicate(p)} aria-label="Duplicate payment">
-                    <Copy className="h-4 w-4" />
                   </Button>
                   <Button variant="ghost" size="icon" onClick={() => handleDelete(p.id)} aria-label="Delete payment">
                     <Trash2 className="h-4 w-4 text-destructive" />
