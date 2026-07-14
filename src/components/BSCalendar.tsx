@@ -69,13 +69,13 @@ export function BSCalendar({ value, onChange }: BSCalendarProps) {
   return (
     <div className="p-3 w-[280px]">
       <div className="flex justify-between items-center mb-4">
-        <Button variant="outline" size="icon" onClick={handlePrevMonth}>
+        <Button variant="outline" size="icon" onClick={handlePrevMonth} aria-label="Previous month">
           <ChevronLeft className="h-4 w-4" />
         </Button>
         <div className="font-semibold text-sm">
           {nepaliMonths[currentMonth]} {currentYear}
         </div>
-        <Button variant="outline" size="icon" onClick={handleNextMonth}>
+        <Button variant="outline" size="icon" onClick={handleNextMonth} aria-label="Next month">
           <ChevronRight className="h-4 w-4" />
         </Button>
       </div>

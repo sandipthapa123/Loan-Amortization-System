@@ -89,7 +89,7 @@ export function DualDatePicker({ value, onChange, label, className }: DualDatePi
             />
             <Popover open={isAdOpen} onOpenChange={setIsAdOpen}>
               <PopoverTrigger asChild>
-                <Button variant="outline" size="icon" className="shrink-0">
+                <Button variant="outline" size="icon" className="shrink-0" aria-label="Open AD calendar">
                   <CalendarIcon className="h-4 w-4" />
                 </Button>
               </PopoverTrigger>
@@ -116,7 +116,7 @@ export function DualDatePicker({ value, onChange, label, className }: DualDatePi
             />
             <Popover open={isBsOpen} onOpenChange={setIsBsOpen}>
               <PopoverTrigger asChild>
-                <Button variant="outline" size="icon" className="shrink-0">
+                <Button variant="outline" size="icon" className="shrink-0" aria-label="Open BS calendar">
                   <CalendarIcon className="h-4 w-4" />
                 </Button>
               </PopoverTrigger>
