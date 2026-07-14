@@ -84,8 +84,8 @@ export function Amortization() {
                     <TableHead className="text-right">Accrued Interest (Rs.)</TableHead>
                     <TableHead className="text-right">Payment (Rs.)</TableHead>
                     <TableHead className="text-right">Interest Paid (Rs.)</TableHead>
-                    <TableHead className="text-right">Principal Paid (Rs.)</TableHead>
                     {isDetailedView && <TableHead className="text-right">Unpaid Interest Bucket (Rs.)</TableHead>}
+                    <TableHead className="text-right">Principal Paid (Rs.)</TableHead>
                     <TableHead className="text-right">Closing Principal (Rs.)</TableHead>
                     <TableHead className="text-right">Total Outstanding (Rs.)</TableHead>
                   </TableRow>
@@ -107,8 +107,8 @@ export function Amortization() {
                         <TableCell className="text-right">{row.interest.toFixed(2)}</TableCell>
                         <TableCell className="text-right">{row.payment.toFixed(2)}</TableCell>
                         <TableCell className="text-right">{row.interestPaid.toFixed(2)}</TableCell>
-                        <TableCell className="text-right">{row.principalPaid.toFixed(2)}</TableCell>
                         {isDetailedView && <TableCell className="text-right text-destructive">{row.unpaidInterestBucket.toFixed(2)}</TableCell>}
+                        <TableCell className="text-right">{row.principalPaid.toFixed(2)}</TableCell>
                         <TableCell className="text-right">{row.closingPrincipal.toFixed(2)}</TableCell>
                         <TableCell className="text-right font-semibold">{remainingBalance.toFixed(2)}</TableCell>
                       </TableRow>
@@ -135,10 +135,11 @@ export function Amortization() {
                       <TableCell className="text-right font-bold">
                         {schedule.reduce((sum, row) => sum + row.interestPaid.toNumber(), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </TableCell>
+                      {isDetailedView && <TableCell></TableCell>}
                       <TableCell className="text-right font-bold">
                         {schedule.reduce((sum, row) => sum + row.principalPaid.toNumber(), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </TableCell>
-                      <TableCell colSpan={isDetailedView ? 3 : 2}></TableCell>
+                      <TableCell colSpan={2}></TableCell>
                     </TableRow>
                   </TableFooter>
                 )}

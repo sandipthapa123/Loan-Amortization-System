@@ -30,14 +30,14 @@ export class ExportService {
       row.interest.toFixed(2),
       row.payment.toFixed(2),
       row.interestPaid.toFixed(2),
-      row.principalPaid.toFixed(2),
       row.unpaidInterestBucket.toFixed(2),
+      row.principalPaid.toFixed(2),
       row.closingPrincipal.toFixed(2)
     ]);
 
     autoTable(doc, {
       startY: 50,
-      head: [['No', 'From (BS)', 'To (BS)', 'Days', 'Opening (Rs.)', 'Interest (Rs.)', 'Payment (Rs.)', 'Int. Paid (Rs.)', 'Prin. Paid (Rs.)', 'Unpaid Int. (Rs.)', 'Closing (Rs.)']],
+      head: [['No', 'From (BS)', 'To (BS)', 'Days', 'Opening (Rs.)', 'Interest (Rs.)', 'Payment (Rs.)', 'Int. Paid (Rs.)', 'Unpaid Int. (Rs.)', 'Prin. Paid (Rs.)', 'Closing (Rs.)']],
       body: tableData,
       theme: 'grid',
       styles: { fontSize: 8 },
@@ -60,8 +60,8 @@ export class ExportService {
       'Accrued Interest (Rs.)': row.interest.toNumber(),
       'Payment (Rs.)': row.payment.toNumber(),
       'Interest Paid (Rs.)': row.interestPaid.toNumber(),
-      'Principal Paid (Rs.)': row.principalPaid.toNumber(),
       'Unpaid Interest Bucket (Rs.)': row.unpaidInterestBucket.toNumber(),
+      'Principal Paid (Rs.)': row.principalPaid.toNumber(),
       'Closing Principal (Rs.)': row.closingPrincipal.toNumber(),
       'Remaining Balance (Rs.)': row.closingPrincipal.plus(row.unpaidInterestBucket).toNumber()
     }));
@@ -85,8 +85,8 @@ export class ExportService {
       'Accrued Interest (Rs.)': row.interest.toFixed(2),
       'Payment (Rs.)': row.payment.toFixed(2),
       'Interest Paid (Rs.)': row.interestPaid.toFixed(2),
-      'Principal Paid (Rs.)': row.principalPaid.toFixed(2),
       'Unpaid Interest Bucket (Rs.)': row.unpaidInterestBucket.toFixed(2),
+      'Principal Paid (Rs.)': row.principalPaid.toFixed(2),
       'Closing Principal (Rs.)': row.closingPrincipal.toFixed(2),
       'Remaining Balance (Rs.)': row.closingPrincipal.plus(row.unpaidInterestBucket).toFixed(2)
     }));
