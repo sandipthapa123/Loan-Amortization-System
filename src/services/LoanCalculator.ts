@@ -204,8 +204,8 @@ export class LoanCalculator {
       accruedInterestSinceLastPayment,
       settlementAmountToday: outstandingBalance,
       loanProgressPercentage,
-      loanAge: DateService.getDuration(loan.issueDate, reportDate),
-      remainingLoanTerm: DateService.getDuration(reportDate, loan.dueDate)
+      loanAge: DateService.getDuration(loan.issueDate, new Date().toISOString().split('T')[0]),
+      remainingLoanTerm: DateService.getDuration(new Date().toISOString().split('T')[0], loan.dueDate)
     };
   }
 }
