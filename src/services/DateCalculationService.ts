@@ -5,7 +5,14 @@ import { differenceInDays, isValid, parse, format as formatAD, intervalToDuratio
 export const DAY_COUNT_OPTIONS = ['Actual/365', 'Actual/360', 'Actual/Actual'] as const;
 export type DayCountBasis = typeof DAY_COUNT_OPTIONS[number];
 
-export class DateService {
+export class DateCalculationService {
+  /**
+   * Defines the standard date bounds for all financial calculations.
+   * Mathematical Rule: [Start Date, End Date)
+   * The start date is strictly INCLUDED. The end date is strictly EXCLUDED.
+   */
+  static readonly BOUNDARY_RULE = '[Start Date, End Date)';
+
   /**
    * Converts AD date string (YYYY-MM-DD) to BS date string (YYYY-MM-DD).
    * Uses local date construction to avoid UTC midnight timezone shift.

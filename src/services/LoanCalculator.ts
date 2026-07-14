@@ -1,5 +1,5 @@
 import Decimal from 'decimal.js';
-import { DateService, DayCountBasis } from './DateService';
+import { DateCalculationService, DayCountBasis } from './DateCalculationService';
 
 Decimal.set({ precision: 20, rounding: Decimal.ROUND_HALF_UP });
 
@@ -60,9 +60,9 @@ export class LoanCalculator {
 
     // Helper to process a period
     const processPeriod = (fromDate: string, toDate: string, payment: PaymentInput | null) => {
-      const days = Math.max(0, DateService.getDaysDifference(fromDate, toDate));
+      const days = Math.max(0, DateCalculationService.getDaysDifference(fromDate, toDate));
       const rate = new Decimal(annualInterestRate).dividedBy(100);
-      const yearFraction = new Decimal(DateService.getYearFraction(days, basis, new Date(fromDate).getFullYear()));
+      const yearFraction = new Decimal(DateCalculationService.getYearFraction(days, basis, new Date(fromDate).getFullYear()));
       
       const interest = currentPrincipal.times(rate).times(yearFraction);
       
@@ -195,9 +195,9 @@ export class LoanCalculator {
         scheduleUnpaidInterest = row.unpaidInterestBucket;
       } else if (fromDateTime < reportDateTime) {
         // Row crosses the report date. Accrue prorated interest up to report date.
-        const days = DateService.getDaysDifference(row.fromDate, reportDate);
+        const days = DateCalculationService.getDaysDifference(row.fromDate, reportDate);
         const rate = new Decimal(loan.interestRate).dividedBy(100);
-        const yearFraction = new Decimal(DateService.getYearFraction(days, loan.dayCountBasis, new Date(row.fromDate).getFullYear()));
+        const yearFraction = new Decimal(DateCalculationService.getYearFraction(days, loan.dayCountBasis, new Date(row.fromDate).getFullYear()));
         const proratedInterest = row.openingPrincipal.times(rate).times(yearFraction);
         
         scheduleInterestAccrued = scheduleInterestAccrued.plus(proratedInterest);
@@ -211,9 +211,9 @@ export class LoanCalculator {
 
     let accruedInterestSinceLastPayment = new Decimal(0);
     if (new Date(reportDate).getTime() > new Date(lastProcessedDate).getTime() && currentPrincipal.greaterThan(0)) {
-      const days = DateService.getDaysDifference(lastProcessedDate, reportDate);
+      const days = DateCalculationService.getDaysDifference(lastProcessedDate, reportDate);
       const rate = new Decimal(loan.interestRate).dividedBy(100);
-      const yearFraction = new Decimal(DateService.getYearFraction(days, loan.dayCountBasis, new Date(lastProcessedDate).getFullYear()));
+      const yearFraction = new Decimal(DateCalculationService.getYearFraction(days, loan.dayCountBasis, new Date(lastProcessedDate).getFullYear()));
       accruedInterestSinceLastPayment = currentPrincipal.times(rate).times(yearFraction);
     }
 
@@ -232,9 +232,9 @@ export class LoanCalculator {
         totalProjectedInterest = totalProjectedInterest.plus(row.interest);
       } else {
         if (new Date(row.fromDate).getTime() < new Date(loan.dueDate).getTime()) {
-          const daysToDueDate = DateService.getDaysDifference(row.fromDate, loan.dueDate);
+          const daysToDueDate = DateCalculationService.getDaysDifference(row.fromDate, loan.dueDate);
           const rate = new Decimal(loan.interestRate).dividedBy(100);
-          const yearFrac = new Decimal(DateService.getYearFraction(daysToDueDate, loan.dayCountBasis, new Date(row.fromDate).getFullYear()));
+          const yearFrac = new Decimal(DateCalculationService.getYearFraction(daysToDueDate, loan.dayCountBasis, new Date(row.fromDate).getFullYear()));
           const proratedInterest = row.openingPrincipal.times(rate).times(yearFrac);
           totalProjectedInterest = totalProjectedInterest.plus(proratedInterest);
         }
@@ -243,7 +243,7 @@ export class LoanCalculator {
     }
     const totalLoanValue = originalPrincipal.plus(totalProjectedInterest);
 
-    return {
+    const summaryResult: LoanFinancialSummary = {
       originalPrincipal,
       currentPrincipal,
       principalRepaid,
@@ -261,9 +261,42 @@ export class LoanCalculator {
       loanProgressPercentage,
       totalProjectedInterestToDueDate: totalProjectedInterest,
       totalLoanValue,
-      loanAge: DateService.getDuration(loan.issueDate, new Date().toISOString().split('T')[0]),
-      remainingLoanTerm: DateService.getDuration(new Date().toISOString().split('T')[0], loan.dueDate)
+      loanAge: DateCalculationService.getDuration(loan.issueDate, new Date().toISOString().split('T')[0]),
+      remainingLoanTerm: DateCalculationService.getDuration(new Date().toISOString().split('T')[0], loan.dueDate)
     };
+
+    LoanCalculator.validateSchedule(loan, schedule, summaryResult, reportDate);
+
+    return summaryResult;
+  }
+
+  /**
+   * Internal automated validation check to ensure logical consistency between the date engine,
+   * schedule periods, and summary generation without gaps or overlaps.
+   */
+  static validateSchedule(loan: any, schedule: AmortizationRow[], summary: LoanFinancialSummary, reportDate: string) {
+    if (schedule.length === 0) return;
+
+    let totalLedgerDays = 0;
+    let previousToDate: string | null = null;
+    let hasGapsOrOverlaps = false;
+
+    for (const row of schedule) {
+      totalLedgerDays += row.days;
+      if (previousToDate && previousToDate !== row.fromDate) {
+        hasGapsOrOverlaps = true;
+        console.warn(`[VALIDATION FAILED] Gap or overlap detected between ${previousToDate} and ${row.fromDate}`);
+      }
+      previousToDate = row.toDate;
+    }
+
+    const firstDate = schedule[0].fromDate;
+    const lastDate = schedule[schedule.length - 1].toDate;
+    const elapsed = DateCalculationService.getDaysDifference(firstDate, lastDate);
+    
+    if (totalLedgerDays !== elapsed) {
+      console.warn(`[VALIDATION FAILED] Ledger days sum (${totalLedgerDays}) does not match calendar elapsed days (${elapsed}) between ${firstDate} and ${lastDate}`);
+    }
   }
 }
 

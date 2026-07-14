@@ -2,7 +2,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { AmortizationRow } from './LoanCalculator';
-import { DateService } from './DateService';
+import { DateCalculationService } from './DateCalculationService';
 
 export class ExportService {
   static exportToPDF(loanDetails: any, schedule: AmortizationRow[]) {
@@ -23,8 +23,8 @@ export class ExportService {
     // Table
     const tableData = schedule.map(row => [
       row.rowNumber,
-      DateService.convertADtoBS(row.fromDate),
-      DateService.convertADtoBS(row.toDate),
+      DateCalculationService.convertADtoBS(row.fromDate),
+      DateCalculationService.convertADtoBS(row.toDate),
       row.days,
       row.allocationPolicyUsed === 'INTEREST_FIRST' ? 'INT_FIRST' : row.allocationPolicyUsed === 'PRINCIPAL_FIRST' ? 'PRIN_FIRST' : 'MANUAL',
       row.openingPrincipal.toFixed(2),
@@ -52,9 +52,9 @@ export class ExportService {
     const data = schedule.map(row => ({
       'No.': row.rowNumber,
       'From Date (AD)': row.fromDate,
-      'From Date (BS)': DateService.convertADtoBS(row.fromDate),
+      'From Date (BS)': DateCalculationService.convertADtoBS(row.fromDate),
       'To Date (AD)': row.toDate,
-      'To Date (BS)': DateService.convertADtoBS(row.toDate),
+      'To Date (BS)': DateCalculationService.convertADtoBS(row.toDate),
       'Days': row.days,
       'Allocation Policy': row.allocationPolicyUsed,
       'Opening Principal': row.openingPrincipal.toNumber(),
@@ -78,9 +78,9 @@ export class ExportService {
     const data = schedule.map(row => ({
       'No.': row.rowNumber,
       'From Date (AD)': row.fromDate,
-      'From Date (BS)': DateService.convertADtoBS(row.fromDate),
+      'From Date (BS)': DateCalculationService.convertADtoBS(row.fromDate),
       'To Date (AD)': row.toDate,
-      'To Date (BS)': DateService.convertADtoBS(row.toDate),
+      'To Date (BS)': DateCalculationService.convertADtoBS(row.toDate),
       'Days': row.days,
       'Allocation Policy': row.allocationPolicyUsed,
       'Opening Principal': row.openingPrincipal.toFixed(2),

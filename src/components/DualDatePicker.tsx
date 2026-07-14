@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
 import { BSCalendar } from './BSCalendar';
-import { DateService } from '@/services/DateService';
+import { DateCalculationService } from '@/services/DateCalculationService';
 
 interface DualDatePickerProps {
   value?: string; // AD string YYYY-MM-DD
@@ -23,7 +23,7 @@ interface DualDatePickerProps {
 
 export function DualDatePicker({ value, onChange, label, className }: DualDatePickerProps) {
   const [adText, setAdText] = useState(value || '');
-  const [bsText, setBsText] = useState(value ? DateService.convertADtoBS(value) : '');
+  const [bsText, setBsText] = useState(value ? DateCalculationService.convertADtoBS(value) : '');
 
   const [isAdOpen, setIsAdOpen] = useState(false);
   const [isBsOpen, setIsBsOpen] = useState(false);
@@ -31,15 +31,15 @@ export function DualDatePicker({ value, onChange, label, className }: DualDatePi
   useEffect(() => {
     if (value && value !== adText) {
       setAdText(value);
-      setBsText(DateService.convertADtoBS(value));
+      setBsText(DateCalculationService.convertADtoBS(value));
     }
   }, [value]);
 
   const handleAdTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const text = e.target.value;
     setAdText(text);
-    if (DateService.isValidAD(text)) {
-      const bs = DateService.convertADtoBS(text);
+    if (DateCalculationService.isValidAD(text)) {
+      const bs = DateCalculationService.convertADtoBS(text);
       setBsText(bs);
       onChange?.(text);
     }
@@ -48,8 +48,8 @@ export function DualDatePicker({ value, onChange, label, className }: DualDatePi
   const handleBsTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const text = e.target.value;
     setBsText(text);
-    if (DateService.isValidBS(text)) {
-      const ad = DateService.convertBStoAD(text);
+    if (DateCalculationService.isValidBS(text)) {
+      const ad = DateCalculationService.convertBStoAD(text);
       setAdText(ad);
       onChange?.(ad);
     }
@@ -59,7 +59,7 @@ export function DualDatePicker({ value, onChange, label, className }: DualDatePi
     if (date) {
       const adStr = format(date, 'yyyy-MM-dd');
       setAdText(adStr);
-      setBsText(DateService.convertADtoBS(adStr));
+      setBsText(DateCalculationService.convertADtoBS(adStr));
       onChange?.(adStr);
       setIsAdOpen(false);
     }
@@ -67,7 +67,7 @@ export function DualDatePicker({ value, onChange, label, className }: DualDatePi
 
   const handleBsSelect = (bsStr: string) => {
     setBsText(bsStr);
-    const adStr = DateService.convertBStoAD(bsStr);
+    const adStr = DateCalculationService.convertBStoAD(bsStr);
     setAdText(adStr);
     onChange?.(adStr);
     setIsBsOpen(false);
@@ -96,7 +96,7 @@ export function DualDatePicker({ value, onChange, label, className }: DualDatePi
               <PopoverContent className="w-auto p-0" align="end">
                 <Calendar
                   mode="single"
-                  selected={adText && DateService.isValidAD(adText) ? parse(adText, 'yyyy-MM-dd', new Date()) : undefined}
+                  selected={adText && DateCalculationService.isValidAD(adText) ? parse(adText, 'yyyy-MM-dd', new Date()) : undefined}
                   onSelect={handleAdSelect}
                 />
               </PopoverContent>
@@ -122,7 +122,7 @@ export function DualDatePicker({ value, onChange, label, className }: DualDatePi
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="end">
                 <BSCalendar
-                  value={DateService.isValidBS(bsText) ? bsText : undefined}
+                  value={DateCalculationService.isValidBS(bsText) ? bsText : undefined}
                   onChange={handleBsSelect}
                 />
               </PopoverContent>

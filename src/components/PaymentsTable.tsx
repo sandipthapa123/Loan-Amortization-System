@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Payment, db } from '@/services/StorageService';
-import { DateService } from '@/services/DateService';
+import { DateCalculationService } from '@/services/DateCalculationService';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Edit2, Trash2, Copy, Plus } from 'lucide-react';
@@ -235,7 +235,7 @@ export function PaymentsTable({ loanId, payments }: PaymentsTableProps) {
             {sortedPaymentsDesc.map(p => (
               <TableRow key={p.id}>
                 <TableCell>{p.date}</TableCell>
-                <TableCell>{DateService.convertADtoBS(p.date)}</TableCell>
+                <TableCell>{DateCalculationService.convertADtoBS(p.date)}</TableCell>
                 <TableCell className="text-right font-semibold">{p.amount.toLocaleString()}</TableCell>
                 <TableCell className="text-right font-semibold text-muted-foreground">{p.cumulativeAmount.toLocaleString()}</TableCell>
                 <TableCell>

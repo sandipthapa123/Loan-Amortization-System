@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAppStore } from '@/store/useAppStore';
-import { DateService } from '@/services/DateService';
+import { DateCalculationService } from '@/services/DateCalculationService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
@@ -93,9 +93,9 @@ export function Amortization() {
                       <TableRow key={row.rowNumber}>
                         <TableCell>{row.rowNumber}</TableCell>
                         <TableCell className="text-xs whitespace-nowrap">{row.fromDate}</TableCell>
-                        <TableCell className="text-xs whitespace-nowrap">{DateService.convertADtoBS(row.fromDate)}</TableCell>
+                        <TableCell className="text-xs whitespace-nowrap">{DateCalculationService.convertADtoBS(row.fromDate)}</TableCell>
                         <TableCell className="text-xs whitespace-nowrap">{row.toDate}</TableCell>
-                        <TableCell className="text-xs whitespace-nowrap">{DateService.convertADtoBS(row.toDate)}</TableCell>
+                        <TableCell className="text-xs whitespace-nowrap">{DateCalculationService.convertADtoBS(row.toDate)}</TableCell>
                         <TableCell>{row.days}</TableCell>
                         <TableCell className="text-xs text-muted-foreground">{policyLabel}</TableCell>
                         <TableCell className="text-right">{row.openingPrincipal.toFixed(2)}</TableCell>
