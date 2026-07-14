@@ -79,7 +79,6 @@ export function Amortization() {
                     {isDetailedView && <TableHead>To Date (AD)</TableHead>}
                     <TableHead>{isDetailedView ? 'To Date (BS)' : 'Date (BS)'}</TableHead>
                     {isDetailedView && <TableHead>Days</TableHead>}
-                    {isDetailedView && <TableHead>Policy Used</TableHead>}
                     <TableHead className="text-right">Opening (Rs.)</TableHead>
                     {isDetailedView && <TableHead className="text-right">Interest Formula</TableHead>}
                     <TableHead className="text-right">Accrued Interest (Rs.)</TableHead>
@@ -94,11 +93,6 @@ export function Amortization() {
                 <TableBody>
                   {schedule.map((row) => {
                     const remainingBalance = row.closingPrincipal.plus(row.unpaidInterestBucket);
-                    
-                    const policyLabel = row.allocationPolicyUsed === 'INTEREST_FIRST' ? 'Interest First' :
-                                        row.allocationPolicyUsed === 'PRINCIPAL_FIRST' ? 'Principal First' :
-                                        row.allocationPolicyUsed === 'MANUAL' ? 'Manual' :
-                                        row.allocationPolicyUsed;
 
                     return (
                       <TableRow key={row.rowNumber}>
@@ -108,7 +102,6 @@ export function Amortization() {
                         {isDetailedView && <TableCell className="text-xs whitespace-nowrap">{row.toDate}</TableCell>}
                         <TableCell className="text-xs whitespace-nowrap">{DateCalculationService.convertADtoBS(row.toDate)}</TableCell>
                         {isDetailedView && <TableCell>{row.days}</TableCell>}
-                        {isDetailedView && <TableCell className="text-xs text-muted-foreground">{policyLabel}</TableCell>}
                         <TableCell className="text-right">{row.openingPrincipal.toFixed(2)}</TableCell>
                         {isDetailedView && <TableCell className="text-right text-xs text-muted-foreground whitespace-nowrap">{row.interestFormula}</TableCell>}
                         <TableCell className="text-right">{row.interest.toFixed(2)}</TableCell>
@@ -123,7 +116,7 @@ export function Amortization() {
                   })}
                   {schedule.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={isDetailedView ? 16 : 8} className="text-center text-muted-foreground py-8">
+                      <TableCell colSpan={isDetailedView ? 15 : 8} className="text-center text-muted-foreground py-8">
                         No payments recorded yet. Add payments to generate schedule.
                       </TableCell>
                     </TableRow>
@@ -132,7 +125,7 @@ export function Amortization() {
                 {schedule.length > 0 && (
                   <TableFooter>
                     <TableRow>
-                      <TableCell colSpan={isDetailedView ? 9 : 2} className="text-right font-bold">Total</TableCell>
+                      <TableCell colSpan={isDetailedView ? 8 : 2} className="text-right font-bold">Total</TableCell>
                       <TableCell className="text-right font-bold">
                         {schedule.reduce((sum, row) => sum + row.interest.toNumber(), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </TableCell>

@@ -124,18 +124,7 @@ export function PaymentsTable({ loanId, payments }: PaymentsTableProps) {
   const loan = useAppStore(state => state.loans.find(l => l.id === loanId));
   const defaultPolicy = loan?.allocationPolicy || 'INTEREST_FIRST';
 
-  const getPolicyLabel = (policy: string | undefined) => {
-    const actualPolicy = (!policy || policy === 'LOAN_DEFAULT') ? defaultPolicy : policy;
-    const suffix = (!policy || policy === 'LOAN_DEFAULT') ? ' (Loan Default)' : '';
-    
-    switch (actualPolicy) {
-      case 'INTEREST_FIRST': return 'Interest First' + suffix;
-      case 'PRINCIPAL_FIRST': return 'Principal First' + suffix;
-      case 'PROPORTIONAL': return 'Proportional' + suffix;
-      case 'MANUAL': return 'Manual' + suffix;
-      default: return 'Interest First' + suffix;
-    }
-  };
+
 
   const sortedPaymentsAsc = [...payments].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   let runningTotal = 0;
@@ -226,7 +215,6 @@ export function PaymentsTable({ loanId, payments }: PaymentsTableProps) {
               <TableHead>Date (BS)</TableHead>
               <TableHead className="text-right">Amount (Rs.)</TableHead>
               <TableHead className="text-right">Cumulative Amount (Rs.)</TableHead>
-              <TableHead>Policy</TableHead>
               <TableHead>Reference</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -236,12 +224,11 @@ export function PaymentsTable({ loanId, payments }: PaymentsTableProps) {
               <TableRow key={p.id}>
                 <TableCell>{p.date}</TableCell>
                 <TableCell>{DateCalculationService.convertADtoBS(p.date)}</TableCell>
-                <TableCell className="text-right font-semibold">{p.amount.toLocaleString()}</TableCell>
-                <TableCell className="text-right font-semibold text-muted-foreground">{p.cumulativeAmount.toLocaleString()}</TableCell>
-                <TableCell>
-                  {getPolicyLabel(p.allocationPolicy)}
-                  {p.allocationPolicy === 'MANUAL' && <span className="text-xs text-muted-foreground block">(I: {p.manualInterestPaid}, P: {p.manualPrincipalPaid})</span>}
+                <TableCell className="text-right font-semibold">
+                  {p.amount.toLocaleString()}
+                  {p.allocationPolicy === 'MANUAL' && <span className="text-xs text-muted-foreground block font-normal text-right">Manual (I: {p.manualInterestPaid}, P: {p.manualPrincipalPaid})</span>}
                 </TableCell>
+                <TableCell className="text-right font-semibold text-muted-foreground">{p.cumulativeAmount.toLocaleString()}</TableCell>
                 <TableCell>{p.reference}</TableCell>
                 <TableCell className="text-right space-x-2">
                   <Button variant="ghost" size="icon" onClick={() => handleEdit(p)} aria-label="Edit payment">
@@ -258,7 +245,7 @@ export function PaymentsTable({ loanId, payments }: PaymentsTableProps) {
             ))}
             {sortedPaymentsDesc.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-4 text-muted-foreground">No payments found</TableCell>
+                <TableCell colSpan={6} className="text-center py-4 text-muted-foreground">No payments found</TableCell>
               </TableRow>
             )}
           </TableBody>

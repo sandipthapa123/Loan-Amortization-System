@@ -26,7 +26,6 @@ export class ExportService {
       DateCalculationService.convertADtoBS(row.fromDate),
       DateCalculationService.convertADtoBS(row.toDate),
       row.days,
-      row.allocationPolicyUsed === 'INTEREST_FIRST' ? 'INT_FIRST' : row.allocationPolicyUsed === 'PRINCIPAL_FIRST' ? 'PRIN_FIRST' : 'MANUAL',
       row.openingPrincipal.toFixed(2),
       row.interest.toFixed(2),
       row.payment.toFixed(2),
@@ -38,7 +37,7 @@ export class ExportService {
 
     autoTable(doc, {
       startY: 50,
-      head: [['No', 'From (BS)', 'To (BS)', 'Days', 'Policy', 'Opening (Rs.)', 'Interest (Rs.)', 'Payment (Rs.)', 'Int. Paid (Rs.)', 'Prin. Paid (Rs.)', 'Unpaid Int. (Rs.)', 'Closing (Rs.)']],
+      head: [['No', 'From (BS)', 'To (BS)', 'Days', 'Opening (Rs.)', 'Interest (Rs.)', 'Payment (Rs.)', 'Int. Paid (Rs.)', 'Prin. Paid (Rs.)', 'Unpaid Int. (Rs.)', 'Closing (Rs.)']],
       body: tableData,
       theme: 'grid',
       styles: { fontSize: 8 },
@@ -56,7 +55,6 @@ export class ExportService {
       'To Date (AD)': row.toDate,
       'To Date (BS)': DateCalculationService.convertADtoBS(row.toDate),
       'Days': row.days,
-      'Allocation Policy': row.allocationPolicyUsed,
       'Opening Principal (Rs.)': row.openingPrincipal.toNumber(),
       'Interest Formula': row.interestFormula,
       'Accrued Interest (Rs.)': row.interest.toNumber(),
@@ -82,7 +80,6 @@ export class ExportService {
       'To Date (AD)': row.toDate,
       'To Date (BS)': DateCalculationService.convertADtoBS(row.toDate),
       'Days': row.days,
-      'Allocation Policy': row.allocationPolicyUsed,
       'Opening Principal (Rs.)': row.openingPrincipal.toFixed(2),
       'Interest Formula': row.interestFormula,
       'Accrued Interest (Rs.)': row.interest.toFixed(2),
