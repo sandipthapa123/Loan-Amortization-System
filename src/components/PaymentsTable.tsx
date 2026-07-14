@@ -129,7 +129,13 @@ export function PaymentsTable({ loanId, payments }: PaymentsTableProps) {
     }
   };
 
-  const sortedPayments = [...payments].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const sortedPaymentsAsc = [...payments].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  let runningTotal = 0;
+  const paymentsWithCumulative = sortedPaymentsAsc.map(p => {
+    runningTotal += p.amount;
+    return { ...p, cumulativeAmount: runningTotal };
+  });
+  const sortedPaymentsDesc = [...paymentsWithCumulative].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   return (
     <div className="space-y-4">
@@ -211,17 +217,19 @@ export function PaymentsTable({ loanId, payments }: PaymentsTableProps) {
               <TableHead>Date (AD)</TableHead>
               <TableHead>Date (BS)</TableHead>
               <TableHead className="text-right">Amount</TableHead>
+              <TableHead className="text-right">Cumulative Amount</TableHead>
               <TableHead>Policy</TableHead>
               <TableHead>Reference</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedPayments.map(p => (
+            {sortedPaymentsDesc.map(p => (
               <TableRow key={p.id}>
                 <TableCell>{p.date}</TableCell>
                 <TableCell>{DateService.convertADtoBS(p.date)}</TableCell>
                 <TableCell className="text-right font-semibold">{p.amount.toLocaleString()}</TableCell>
+                <TableCell className="text-right font-semibold text-muted-foreground">{p.cumulativeAmount.toLocaleString()}</TableCell>
                 <TableCell>
                   {getPolicyLabel(p.allocationPolicy)}
                   {p.allocationPolicy === 'MANUAL' && <span className="text-xs text-muted-foreground block">(I: {p.manualInterestPaid}, P: {p.manualPrincipalPaid})</span>}
@@ -240,15 +248,15 @@ export function PaymentsTable({ loanId, payments }: PaymentsTableProps) {
                 </TableCell>
               </TableRow>
             ))}
-            {sortedPayments.length === 0 && (
+            {sortedPaymentsDesc.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-4 text-muted-foreground">No payments found</TableCell>
+                <TableCell colSpan={7} className="text-center py-4 text-muted-foreground">No payments found</TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
       </div>
-      {sortedPayments.length > 0 && (
+      {sortedPaymentsDesc.length > 0 && (
         <div className="flex justify-end mt-2">
           <Button variant="outline" size="sm" onClick={() => copyTableToClipboard('payments-table')}>
             <Copy className="mr-2 h-4 w-4" /> Copy Table
