@@ -147,4 +147,85 @@ export class LoanCalculator {
 
     return schedule;
   }
+
+  static calculateSummary(
+    loan: any, 
+    schedule: AmortizationRow[], 
+    reportDate: string
+  ): LoanFinancialSummary {
+    const originalPrincipal = new Decimal(loan.principal);
+    
+    // Sums from the schedule
+    const principalRepaid = schedule.reduce((sum, row) => sum.plus(row.principalPaid), new Decimal(0));
+    const interestPaid = schedule.reduce((sum, row) => sum.plus(row.interestPaid), new Decimal(0));
+    const totalPaymentsReceived = schedule.reduce((sum, row) => sum.plus(row.payment), new Decimal(0));
+    const scheduleInterestAccrued = schedule.reduce((sum, row) => sum.plus(row.interest), new Decimal(0));
+
+    // Determine the last date processed in the schedule
+    let lastProcessedDate = loan.issueDate;
+    let currentPrincipal = originalPrincipal;
+    let scheduleUnpaidInterest = new Decimal(0);
+
+    if (schedule.length > 0) {
+      const lastRow = schedule[schedule.length - 1];
+      lastProcessedDate = lastRow.toDate;
+      currentPrincipal = lastRow.closingPrincipal;
+      scheduleUnpaidInterest = lastRow.unpaidInterestBucket;
+    }
+
+    // Calculate accrued interest since last payment up to the report date
+    let accruedInterestSinceLastPayment = new Decimal(0);
+    if (new Date(reportDate).getTime() > new Date(lastProcessedDate).getTime() && currentPrincipal.greaterThan(0)) {
+      const days = DateService.getDaysDifference(lastProcessedDate, reportDate);
+      const rate = new Decimal(loan.interestRate).dividedBy(100);
+      const yearFraction = new Decimal(DateService.getYearFraction(days, loan.dayCountBasis, new Date(lastProcessedDate).getFullYear()));
+      accruedInterestSinceLastPayment = currentPrincipal.times(rate).times(yearFraction);
+    }
+
+    const interestAccrued = scheduleInterestAccrued.plus(accruedInterestSinceLastPayment);
+    const interestOutstanding = scheduleUnpaidInterest.plus(accruedInterestSinceLastPayment);
+    const principalRemaining = originalPrincipal.minus(principalRepaid); // Should match currentPrincipal
+    const outstandingBalance = principalRemaining.plus(interestOutstanding);
+    const loanProgressPercentage = principalRepaid.dividedBy(originalPrincipal).times(100).toNumber();
+
+    return {
+      originalPrincipal,
+      currentPrincipal,
+      principalRepaid,
+      principalRemaining,
+      interestAccrued,
+      interestPaid,
+      interestOutstanding,
+      totalPaymentsReceived,
+      totalPrincipalPayments: principalRepaid,
+      totalInterestPayments: interestPaid,
+      outstandingBalance,
+      totalAmountDue: outstandingBalance,
+      accruedInterestSinceLastPayment,
+      settlementAmountToday: outstandingBalance,
+      loanProgressPercentage,
+      loanAge: DateService.getDuration(loan.issueDate, reportDate),
+      remainingLoanTerm: DateService.getDuration(reportDate, loan.dueDate)
+    };
+  }
+}
+
+export interface LoanFinancialSummary {
+  originalPrincipal: Decimal;
+  currentPrincipal: Decimal;
+  principalRepaid: Decimal;
+  principalRemaining: Decimal;
+  interestAccrued: Decimal;
+  interestPaid: Decimal;
+  interestOutstanding: Decimal;
+  totalPaymentsReceived: Decimal;
+  totalPrincipalPayments: Decimal;
+  totalInterestPayments: Decimal;
+  outstandingBalance: Decimal;
+  totalAmountDue: Decimal;
+  accruedInterestSinceLastPayment: Decimal;
+  settlementAmountToday: Decimal;
+  loanProgressPercentage: number;
+  loanAge: string;
+  remainingLoanTerm: string;
 }

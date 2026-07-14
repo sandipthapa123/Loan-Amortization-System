@@ -1,11 +1,30 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGrid } from 'recharts';
 import { DateService } from '@/services/DateService';
+import { LoanCalculator } from '@/services/LoanCalculator';
+import { DualDatePicker } from '@/components/DualDatePicker';
+import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
+import { Info } from 'lucide-react';
+import { format } from 'date-fns';
+
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export function Dashboard() {
-  const { summary, loans, payments, activeLoan, schedule } = useAppStore();
+  const { summary, loans, payments, activeLoan, schedule, setActiveLoanId } = useAppStore();
+  
+  // Report date defaults to today
+  const [reportDate, setReportDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
+  const prevReportDate = useRef<string>(reportDate);
+  const [announceText, setAnnounceText] = useState('');
+
+  // Automatically select the first loan if none is active and loans exist
+  useEffect(() => {
+    if (!activeLoan && loans.length > 0) {
+      setActiveLoanId(loans[0].id);
+    }
+  }, [activeLoan, loans, setActiveLoanId]);
 
   const chartData = useMemo(() => {
     if (!loans) return [];
@@ -20,37 +39,67 @@ export function Dashboard() {
     });
   }, [loans, payments]);
 
-  const activeLoanStats = useMemo(() => {
+  const financialSummary = useMemo(() => {
     if (!activeLoan) return null;
-    const loanPayments = payments.filter(p => p.loanId === activeLoan.id);
-    const totalPaymentsAmount = loanPayments.reduce((acc, p) => acc + p.amount, 0);
-    
-    // Get latest schedule row
-    const latestRow = schedule.length > 0 ? schedule[schedule.length - 1] : null;
-    const outstandingPrincipal = latestRow ? latestRow.closingPrincipal.toNumber() : activeLoan.principal;
-    
-    return {
-      loanNumber: activeLoan.loanNumber || 'N/A',
-      borrower: activeLoan.borrower,
-      principal: activeLoan.principal,
-      interestRate: activeLoan.interestRate,
-      issueDateAD: activeLoan.issueDate,
-      issueDateBS: DateService.convertADtoBS(activeLoan.issueDate),
-      dueDateAD: activeLoan.dueDate,
-      dueDateBS: DateService.convertADtoBS(activeLoan.dueDate),
-      allocationPolicy: activeLoan.allocationPolicy || 'INTEREST_FIRST',
-      outstandingPrincipal: outstandingPrincipal,
-      outstandingInterest: latestRow ? latestRow.unpaidInterestBucket.toNumber() : 0, 
-      totalPayments: totalPaymentsAmount,
-      remainingBalance: outstandingPrincipal + (latestRow ? latestRow.unpaidInterestBucket.toNumber() : 0)
-    };
-  }, [activeLoan, payments, schedule]);
+    return LoanCalculator.calculateSummary(activeLoan, schedule, reportDate);
+  }, [activeLoan, schedule, reportDate]);
+
+  useEffect(() => {
+    if (activeLoan && reportDate !== prevReportDate.current) {
+      setAnnounceText(`Loan summary recalculated for report date ${reportDate}`);
+      prevReportDate.current = reportDate;
+      
+      // Clear announcement after screen reader reads it
+      const timer = setTimeout(() => setAnnounceText(''), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [reportDate, activeLoan]);
+
+  const summaryRows = financialSummary ? [
+    { field: 'Original Principal', value: financialSummary.originalPrincipal.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), tooltip: 'Initial principal entered when the loan was created' },
+    { field: 'Current Principal', value: financialSummary.currentPrincipal.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), tooltip: 'Current outstanding principal after all principal repayments' },
+    { field: 'Principal Repaid', value: financialSummary.principalRepaid.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), tooltip: 'Total principal repaid' },
+    { field: 'Principal Remaining', value: financialSummary.principalRemaining.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), tooltip: 'Remaining principal (Original Principal − Principal Repaid)' },
+    { field: 'Interest Accrued', value: financialSummary.interestAccrued.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), tooltip: 'Total interest accrued to the selected report date' },
+    { field: 'Interest Paid', value: financialSummary.interestPaid.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), tooltip: 'Total interest paid' },
+    { field: 'Interest Outstanding', value: financialSummary.interestOutstanding.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), tooltip: 'Unpaid interest (Interest Accrued − Interest Paid)' },
+    { field: 'Total Payments Received', value: financialSummary.totalPaymentsReceived.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), tooltip: 'Sum of all payments received regardless of allocation' },
+    { field: 'Total Principal Payments', value: financialSummary.totalPrincipalPayments.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), tooltip: 'Total payments applied to principal' },
+    { field: 'Total Interest Payments', value: financialSummary.totalInterestPayments.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), tooltip: 'Total payments applied to interest' },
+    { field: 'Outstanding Balance', value: financialSummary.outstandingBalance.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), tooltip: 'Remaining balance (Principal Remaining + Interest Outstanding)' },
+    { field: 'Total Amount Due (Report Date)', value: financialSummary.totalAmountDue.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), tooltip: 'Amount payable on the selected report date' },
+    { field: 'Accrued Interest Since Last Payment', value: financialSummary.accruedInterestSinceLastPayment.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), tooltip: 'Interest accumulated after the most recent payment up to the selected report date' },
+    { field: 'Settlement Amount Today', value: financialSummary.settlementAmountToday.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), tooltip: 'Amount required to completely settle the loan today' },
+    { field: 'Loan Progress (%)', value: `${financialSummary.loanProgressPercentage.toFixed(2)}%`, tooltip: 'Percentage of principal repaid' },
+    { field: 'Loan Age', value: financialSummary.loanAge, tooltip: 'Time elapsed since the issue date' },
+    { field: 'Remaining Loan Term', value: financialSummary.remainingLoanTerm, tooltip: 'Time remaining until the due date' },
+  ] : [];
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">Dashboard Overview</h2>
-        <p className="text-muted-foreground">High-level view of all loans and active loan details.</p>
+      <div aria-live="polite" className="sr-only">
+        {announceText}
+      </div>
+      <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Dashboard Overview</h2>
+          <p className="text-muted-foreground">High-level view of all loans and active loan details.</p>
+        </div>
+        
+        {loans.length > 0 && (
+          <div className="w-full md:w-64">
+            <Select value={activeLoan?.id || ''} onValueChange={setActiveLoanId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select active loan" />
+              </SelectTrigger>
+              <SelectContent>
+                {loans.map(l => (
+                  <SelectItem key={l.id} value={l.id}>{l.borrower} ({l.loanNumber || 'N/A'})</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -80,63 +129,40 @@ export function Dashboard() {
         </Card>
       </div>
 
-      {activeLoanStats && (
-        <Card className="border-primary/50 bg-primary/5">
-          <CardHeader>
-            <CardTitle>Active Loan Details ({activeLoanStats.borrower})</CardTitle>
+      {activeLoan && financialSummary && (
+        <Card className="border-primary/50 bg-primary/5 shadow-sm">
+          <CardHeader className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+            <div>
+              <CardTitle>Loan Financial Summary ({activeLoan.borrower})</CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">Complete snapshot of the loan's financial position.</p>
+            </div>
+            <div className="w-full md:w-64 bg-background p-3 rounded-md border shadow-sm">
+              <DualDatePicker 
+                label="Report Date" 
+                value={reportDate} 
+                onChange={(d) => setReportDate(d)} 
+              />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <div>
-                <span className="text-muted-foreground block mb-1">Loan Number</span>
-                <span className="font-medium">{activeLoanStats.loanNumber}</span>
-              </div>
-              <div>
-                <span className="text-muted-foreground block mb-1">Borrower</span>
-                <span className="font-medium">{activeLoanStats.borrower}</span>
-              </div>
-              <div>
-                <span className="text-muted-foreground block mb-1">Principal</span>
-                <span className="font-medium">{activeLoanStats.principal.toLocaleString()}</span>
-              </div>
-              <div>
-                <span className="text-muted-foreground block mb-1">Interest Rate</span>
-                <span className="font-medium">{activeLoanStats.interestRate}%</span>
-              </div>
-              
-              <div>
-                <span className="text-muted-foreground block mb-1">Issue Date (AD)</span>
-                <span className="font-medium">{activeLoanStats.issueDateAD}</span>
-              </div>
-              <div>
-                <span className="text-muted-foreground block mb-1">Issue Date (BS)</span>
-                <span className="font-medium">{activeLoanStats.issueDateBS}</span>
-              </div>
-              <div>
-                <span className="text-muted-foreground block mb-1">Due Date (AD)</span>
-                <span className="font-medium">{activeLoanStats.dueDateAD}</span>
-              </div>
-              <div>
-                <span className="text-muted-foreground block mb-1">Due Date (BS)</span>
-                <span className="font-medium">{activeLoanStats.dueDateBS}</span>
-              </div>
-
-              <div>
-                <span className="text-muted-foreground block mb-1">Allocation Policy</span>
-                <span className="font-medium">{activeLoanStats.allocationPolicy}</span>
-              </div>
-              <div>
-                <span className="text-muted-foreground block mb-1">Total Payments</span>
-                <span className="font-medium">{activeLoanStats.totalPayments.toLocaleString()}</span>
-              </div>
-              <div>
-                <span className="text-muted-foreground block mb-1">Outstanding Principal</span>
-                <span className="font-medium text-destructive">{activeLoanStats.outstandingPrincipal.toLocaleString()}</span>
-              </div>
-              <div>
-                <span className="text-muted-foreground block mb-1">Remaining Balance</span>
-                <span className="font-medium">{activeLoanStats.remainingBalance.toLocaleString()}</span>
-              </div>
+            <div className="border rounded-md overflow-hidden bg-background">
+              <Table>
+                <TableBody>
+                  {summaryRows.map((row, i) => (
+                    <TableRow key={i} className="hover:bg-muted/30">
+                      <TableCell className="font-medium bg-muted/20 w-1/2 border-r">
+                        <div className="flex items-center gap-2">
+                          {row.field}
+                          <span title={row.tooltip} aria-label={row.tooltip}>
+                            <Info className="h-4 w-4 text-muted-foreground cursor-help" aria-hidden="true" />
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-semibold">{row.value}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           </CardContent>
         </Card>
@@ -153,7 +179,7 @@ export function Dashboard() {
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                 <XAxis dataKey="name" className="text-sm" />
                 <YAxis className="text-sm" />
-                <Tooltip contentStyle={{ borderRadius: '8px' }} />
+                <RechartsTooltip contentStyle={{ borderRadius: '8px' }} />
                 <Bar dataKey="Principal" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="Paid" fill="hsl(var(--secondary))" radius={[4, 4, 0, 0]} />
               </BarChart>

@@ -1,5 +1,5 @@
 import NepaliDate from 'nepali-date-converter';
-import { differenceInDays, isValid, parse, format as formatAD } from 'date-fns';
+import { differenceInDays, isValid, parse, format as formatAD, intervalToDuration } from 'date-fns';
 
 // Use a string union type AND export the values as a const array for runtime use
 export const DAY_COUNT_OPTIONS = ['Actual/365', 'Actual/360', 'Actual/Actual'] as const;
@@ -100,5 +100,29 @@ export class DateService {
       default:
         return days / 365;
     }
+  }
+
+  /**
+   * Calculates the human-readable duration between two dates.
+   */
+  static getDuration(startDateStr: string, endDateStr: string): string {
+    if (!this.isValidAD(startDateStr) || !this.isValidAD(endDateStr)) return '';
+    
+    const [sYear, sMonth, sDay] = startDateStr.split('-').map(Number);
+    const [eYear, eMonth, eDay] = endDateStr.split('-').map(Number);
+    const start = new Date(sYear, sMonth - 1, sDay);
+    const end = new Date(eYear, eMonth - 1, eDay);
+    
+    const duration = start > end 
+      ? intervalToDuration({ start: end, end: start })
+      : intervalToDuration({ start, end });
+      
+    const parts = [];
+    if (duration.years) parts.push(`${duration.years} year${duration.years > 1 ? 's' : ''}`);
+    if (duration.months) parts.push(`${duration.months} month${duration.months > 1 ? 's' : ''}`);
+    if (duration.days) parts.push(`${duration.days} day${duration.days > 1 ? 's' : ''}`);
+    
+    if (parts.length === 0) return '0 days';
+    return parts.join(', ');
   }
 }
