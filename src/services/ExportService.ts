@@ -1,7 +1,7 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
-import { AmortizationRow } from './LoanCalculator';
+import { LoanCalculator, AmortizationRow } from './LoanCalculator';
 import { DateCalculationService } from './DateCalculationService';
 
 export class ExportService {
@@ -44,6 +44,17 @@ export class ExportService {
       headStyles: { fillColor: [41, 128, 185] }
     });
 
+    const summary = LoanCalculator.calculateSummary(loanDetails, schedule, DateCalculationService.getTodayAD());
+    const finalY = (doc as any).lastAutoTable.finalY || 50;
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Total Loan Value: Rs. ${summary.totalLoanValue.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 14, finalY + 10);
+    doc.text(`Total Payments: Rs. ${summary.totalPaymentsReceived.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 14, finalY + 16);
+    doc.text(`Interest Outstanding: Rs. ${summary.interestOutstanding.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 14, finalY + 22);
+    doc.text(`Principal Outstanding: Rs. ${summary.currentPrincipal.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 14, finalY + 28);
+    doc.text(`Total Outstanding Payment: Rs. ${summary.outstandingBalance.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 14, finalY + 34);
+
     doc.save(`Loan_Schedule_${loanDetails.borrower}.pdf`);
   }
 
@@ -64,7 +75,15 @@ export class ExportService {
       'Principal Paid (Rs.)': row.principalPaid.toNumber(),
       'Closing Principal (Rs.)': row.closingPrincipal.toNumber(),
       'Remaining Balance (Rs.)': row.closingPrincipal.plus(row.unpaidInterestBucket).toNumber()
-    }));
+    })) as any[];
+
+    const summary = LoanCalculator.calculateSummary(loanDetails, schedule, DateCalculationService.getTodayAD());
+    data.push({}); // Empty row for spacing
+    data.push({ 'Closing Principal (Rs.)': 'Total Loan Value:', 'Remaining Balance (Rs.)': summary.totalLoanValue.toNumber() });
+    data.push({ 'Closing Principal (Rs.)': 'Total Payments:', 'Remaining Balance (Rs.)': summary.totalPaymentsReceived.toNumber() });
+    data.push({ 'Closing Principal (Rs.)': 'Interest Outstanding:', 'Remaining Balance (Rs.)': summary.interestOutstanding.toNumber() });
+    data.push({ 'Closing Principal (Rs.)': 'Principal Outstanding:', 'Remaining Balance (Rs.)': summary.currentPrincipal.toNumber() });
+    data.push({ 'Closing Principal (Rs.)': 'Total Outstanding Payment:', 'Remaining Balance (Rs.)': summary.outstandingBalance.toNumber() });
 
     const worksheet = XLSX.utils.json_to_sheet(data);
     const workbook = XLSX.utils.book_new();
@@ -89,7 +108,15 @@ export class ExportService {
       'Principal Paid (Rs.)': row.principalPaid.toFixed(2),
       'Closing Principal (Rs.)': row.closingPrincipal.toFixed(2),
       'Remaining Balance (Rs.)': row.closingPrincipal.plus(row.unpaidInterestBucket).toFixed(2)
-    }));
+    })) as any[];
+
+    const summary = LoanCalculator.calculateSummary(loanDetails, schedule, DateCalculationService.getTodayAD());
+    data.push({}); // Empty row for spacing
+    data.push({ 'Closing Principal (Rs.)': 'Total Loan Value:', 'Remaining Balance (Rs.)': summary.totalLoanValue.toFixed(2) });
+    data.push({ 'Closing Principal (Rs.)': 'Total Payments:', 'Remaining Balance (Rs.)': summary.totalPaymentsReceived.toFixed(2) });
+    data.push({ 'Closing Principal (Rs.)': 'Interest Outstanding:', 'Remaining Balance (Rs.)': summary.interestOutstanding.toFixed(2) });
+    data.push({ 'Closing Principal (Rs.)': 'Principal Outstanding:', 'Remaining Balance (Rs.)': summary.currentPrincipal.toFixed(2) });
+    data.push({ 'Closing Principal (Rs.)': 'Total Outstanding Payment:', 'Remaining Balance (Rs.)': summary.outstandingBalance.toFixed(2) });
 
     const worksheet = XLSX.utils.json_to_sheet(data);
     const csv = XLSX.utils.sheet_to_csv(worksheet);
