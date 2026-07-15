@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FileDown, FileSpreadsheet, FileText } from 'lucide-react';
+import { PolicySwitch } from '@/components/PolicySwitch';
 
 export function Reports() {
   const { activeLoanId, setActiveLoanId, activeLoan, schedule, loans } = useAppStore();
@@ -40,19 +41,27 @@ export function Reports() {
           <CardDescription>Select a loan to export its complete schedule.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="w-full md:w-1/2">
-            <Select value={activeLoanId || ''} onValueChange={setActiveLoanId}>
-              <SelectTrigger aria-label="Select Loan to Export">
-                <SelectValue placeholder="Select Loan" />
-              </SelectTrigger>
-              <SelectContent>
-                {loans.map(loan => (
-                  <SelectItem key={loan.id} value={loan.id}>
-                    {loan.borrower} - {loan.principal.toLocaleString()}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
+            <div className="w-full md:w-1/2">
+              <Select value={activeLoanId || ''} onValueChange={setActiveLoanId}>
+                <SelectTrigger aria-label="Select Loan to Export">
+                  <SelectValue placeholder="Select Loan" />
+                </SelectTrigger>
+                <SelectContent>
+                  {loans.map(loan => (
+                    <SelectItem key={loan.id} value={loan.id}>
+                      {loan.borrower} - {loan.principal.toLocaleString()}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {activeLoan && (
+              <div className="w-full md:w-auto">
+                <PolicySwitch />
+              </div>
+            )}
           </div>
 
           <div className="flex flex-wrap gap-4">
