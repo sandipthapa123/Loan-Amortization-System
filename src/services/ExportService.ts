@@ -5,7 +5,7 @@ import { LoanCalculator, AmortizationRow } from './LoanCalculator';
 import { DateCalculationService } from './DateCalculationService';
 
 export class ExportService {
-  static exportToPDF(loanDetails: any, schedule: AmortizationRow[]) {
+  static exportToPDF(loanDetails: any, schedule: AmortizationRow[], isDetailedView: boolean = false, isPreview: boolean = false) {
     const doc = new jsPDF('landscape'); // use landscape for more columns
     
     // Header
@@ -21,26 +21,49 @@ export class ExportService {
     doc.text(`Interest Rate: ${loanDetails.interestRate}%`, 120, 38);
     
     // Table
-    const tableData = schedule.map(row => [
-      row.rowNumber,
-      DateCalculationService.convertADtoBS(row.fromDate),
-      DateCalculationService.convertADtoBS(row.toDate),
-      row.days,
-      row.openingPrincipal.toFixed(2),
-      row.interest.toFixed(2),
-      row.payment.toFixed(2),
-      row.interestPaid.toFixed(2),
-      row.unpaidInterestBucket.toFixed(2),
-      row.principalPaid.toFixed(2),
-      row.closingPrincipal.toFixed(2)
-    ]);
+    const tableData = schedule.map(row => {
+      if (isDetailedView) {
+        return [
+          row.rowNumber,
+          row.fromDate,
+          DateCalculationService.convertADtoBS(row.fromDate),
+          row.toDate,
+          DateCalculationService.convertADtoBS(row.toDate),
+          row.days,
+          row.openingPrincipal.toFixed(2),
+          row.interestFormula,
+          row.interest.toFixed(2),
+          row.payment.toFixed(2),
+          row.interestPaid.toFixed(2),
+          row.unpaidInterestBucket.toFixed(2),
+          row.principalPaid.toFixed(2),
+          row.closingPrincipal.toFixed(2),
+          row.closingPrincipal.plus(row.unpaidInterestBucket).toFixed(2)
+        ];
+      } else {
+        return [
+          DateCalculationService.convertADtoBS(row.toDate),
+          row.openingPrincipal.toFixed(2),
+          row.interest.toFixed(2),
+          row.payment.toFixed(2),
+          row.interestPaid.toFixed(2),
+          row.principalPaid.toFixed(2),
+          row.closingPrincipal.toFixed(2),
+          row.closingPrincipal.plus(row.unpaidInterestBucket).toFixed(2)
+        ];
+      }
+    });
+
+    const head = isDetailedView 
+      ? [['No.', 'From (AD)', 'From (BS)', 'To (AD)', 'To (BS)', 'Days', 'Opening (Rs.)', 'Formula', 'Interest (Rs.)', 'Payment (Rs.)', 'Int. Paid (Rs.)', 'Unpaid Int. (Rs.)', 'Prin. Paid (Rs.)', 'Closing (Rs.)', 'Total Out. (Rs.)']]
+      : [['Date (BS)', 'Opening (Rs.)', 'Interest (Rs.)', 'Payment (Rs.)', 'Int. Paid (Rs.)', 'Prin. Paid (Rs.)', 'Closing (Rs.)', 'Total Out. (Rs.)']];
 
     autoTable(doc, {
       startY: 50,
-      head: [['No', 'From (BS)', 'To (BS)', 'Days', 'Opening (Rs.)', 'Interest (Rs.)', 'Payment (Rs.)', 'Int. Paid (Rs.)', 'Unpaid Int. (Rs.)', 'Prin. Paid (Rs.)', 'Closing (Rs.)']],
+      head: head,
       body: tableData,
       theme: 'grid',
-      styles: { fontSize: 8 },
+      styles: { fontSize: isDetailedView ? 7 : 8 },
       headStyles: { fillColor: [41, 128, 185] }
     });
 
@@ -55,27 +78,48 @@ export class ExportService {
     doc.text(`Principal Outstanding: Rs. ${summary.currentPrincipal.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 14, finalY + 28);
     doc.text(`Total Outstanding Payment: Rs. ${summary.outstandingBalance.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 14, finalY + 34);
 
-    doc.save(`Loan_Schedule_${loanDetails.borrower}.pdf`);
+    if (isPreview) {
+      const blob = doc.output('blob');
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+    } else {
+      doc.save(`Loan_Schedule_${loanDetails.borrower}.pdf`);
+    }
   }
 
-  static exportToExcel(loanDetails: any, schedule: AmortizationRow[]) {
-    const data = schedule.map(row => ({
-      'No.': row.rowNumber,
-      'From Date (AD)': row.fromDate,
-      'From Date (BS)': DateCalculationService.convertADtoBS(row.fromDate),
-      'To Date (AD)': row.toDate,
-      'To Date (BS)': DateCalculationService.convertADtoBS(row.toDate),
-      'Days': row.days,
-      'Opening Principal (Rs.)': row.openingPrincipal.toNumber(),
-      'Interest Formula': row.interestFormula,
-      'Accrued Interest (Rs.)': row.interest.toNumber(),
-      'Payment (Rs.)': row.payment.toNumber(),
-      'Interest Paid (Rs.)': row.interestPaid.toNumber(),
-      'Unpaid Interest Bucket (Rs.)': row.unpaidInterestBucket.toNumber(),
-      'Principal Paid (Rs.)': row.principalPaid.toNumber(),
-      'Closing Principal (Rs.)': row.closingPrincipal.toNumber(),
-      'Remaining Balance (Rs.)': row.closingPrincipal.plus(row.unpaidInterestBucket).toNumber()
-    })) as any[];
+  static exportToExcel(loanDetails: any, schedule: AmortizationRow[], isDetailedView: boolean = false) {
+    const data = schedule.map(row => {
+      if (isDetailedView) {
+        return {
+          'No.': row.rowNumber,
+          'From Date (AD)': row.fromDate,
+          'From Date (BS)': DateCalculationService.convertADtoBS(row.fromDate),
+          'To Date (AD)': row.toDate,
+          'To Date (BS)': DateCalculationService.convertADtoBS(row.toDate),
+          'Days': row.days,
+          'Opening Principal (Rs.)': row.openingPrincipal.toNumber(),
+          'Interest Formula': row.interestFormula,
+          'Accrued Interest (Rs.)': row.interest.toNumber(),
+          'Payment (Rs.)': row.payment.toNumber(),
+          'Interest Paid (Rs.)': row.interestPaid.toNumber(),
+          'Unpaid Interest Bucket (Rs.)': row.unpaidInterestBucket.toNumber(),
+          'Principal Paid (Rs.)': row.principalPaid.toNumber(),
+          'Closing Principal (Rs.)': row.closingPrincipal.toNumber(),
+          'Remaining Balance (Rs.)': row.closingPrincipal.plus(row.unpaidInterestBucket).toNumber()
+        };
+      } else {
+        return {
+          'Date (BS)': DateCalculationService.convertADtoBS(row.toDate),
+          'Opening Principal (Rs.)': row.openingPrincipal.toNumber(),
+          'Accrued Interest (Rs.)': row.interest.toNumber(),
+          'Payment (Rs.)': row.payment.toNumber(),
+          'Interest Paid (Rs.)': row.interestPaid.toNumber(),
+          'Principal Paid (Rs.)': row.principalPaid.toNumber(),
+          'Closing Principal (Rs.)': row.closingPrincipal.toNumber(),
+          'Remaining Balance (Rs.)': row.closingPrincipal.plus(row.unpaidInterestBucket).toNumber()
+        };
+      }
+    }) as any[];
 
     const summary = LoanCalculator.calculateSummary(loanDetails, schedule, DateCalculationService.getTodayAD());
     data.push({}); // Empty row for spacing
@@ -91,24 +135,39 @@ export class ExportService {
     XLSX.writeFile(workbook, `Loan_Schedule_${loanDetails.borrower}.xlsx`);
   }
 
-  static exportToCSV(loanDetails: any, schedule: AmortizationRow[]) {
-    const data = schedule.map(row => ({
-      'No.': row.rowNumber,
-      'From Date (AD)': row.fromDate,
-      'From Date (BS)': DateCalculationService.convertADtoBS(row.fromDate),
-      'To Date (AD)': row.toDate,
-      'To Date (BS)': DateCalculationService.convertADtoBS(row.toDate),
-      'Days': row.days,
-      'Opening Principal (Rs.)': row.openingPrincipal.toFixed(2),
-      'Interest Formula': row.interestFormula,
-      'Accrued Interest (Rs.)': row.interest.toFixed(2),
-      'Payment (Rs.)': row.payment.toFixed(2),
-      'Interest Paid (Rs.)': row.interestPaid.toFixed(2),
-      'Unpaid Interest Bucket (Rs.)': row.unpaidInterestBucket.toFixed(2),
-      'Principal Paid (Rs.)': row.principalPaid.toFixed(2),
-      'Closing Principal (Rs.)': row.closingPrincipal.toFixed(2),
-      'Remaining Balance (Rs.)': row.closingPrincipal.plus(row.unpaidInterestBucket).toFixed(2)
-    })) as any[];
+  static exportToCSV(loanDetails: any, schedule: AmortizationRow[], isDetailedView: boolean = false) {
+    const data = schedule.map(row => {
+      if (isDetailedView) {
+        return {
+          'No.': row.rowNumber,
+          'From Date (AD)': row.fromDate,
+          'From Date (BS)': DateCalculationService.convertADtoBS(row.fromDate),
+          'To Date (AD)': row.toDate,
+          'To Date (BS)': DateCalculationService.convertADtoBS(row.toDate),
+          'Days': row.days,
+          'Opening Principal (Rs.)': row.openingPrincipal.toFixed(2),
+          'Interest Formula': row.interestFormula,
+          'Accrued Interest (Rs.)': row.interest.toFixed(2),
+          'Payment (Rs.)': row.payment.toFixed(2),
+          'Interest Paid (Rs.)': row.interestPaid.toFixed(2),
+          'Unpaid Interest Bucket (Rs.)': row.unpaidInterestBucket.toFixed(2),
+          'Principal Paid (Rs.)': row.principalPaid.toFixed(2),
+          'Closing Principal (Rs.)': row.closingPrincipal.toFixed(2),
+          'Remaining Balance (Rs.)': row.closingPrincipal.plus(row.unpaidInterestBucket).toFixed(2)
+        };
+      } else {
+        return {
+          'Date (BS)': DateCalculationService.convertADtoBS(row.toDate),
+          'Opening Principal (Rs.)': row.openingPrincipal.toFixed(2),
+          'Accrued Interest (Rs.)': row.interest.toFixed(2),
+          'Payment (Rs.)': row.payment.toFixed(2),
+          'Interest Paid (Rs.)': row.interestPaid.toFixed(2),
+          'Principal Paid (Rs.)': row.principalPaid.toFixed(2),
+          'Closing Principal (Rs.)': row.closingPrincipal.toFixed(2),
+          'Remaining Balance (Rs.)': row.closingPrincipal.plus(row.unpaidInterestBucket).toFixed(2)
+        };
+      }
+    }) as any[];
 
     const summary = LoanCalculator.calculateSummary(loanDetails, schedule, DateCalculationService.getTodayAD());
     data.push({}); // Empty row for spacing
