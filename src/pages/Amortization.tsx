@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
 import { PaymentsTable } from '@/components/PaymentsTable';
 import { LoanFinancialSummaryTable } from '@/components/LoanFinancialSummaryTable';
+import { LoanCalculator } from '@/services/LoanCalculator';
 import { Button } from '@/components/ui/button';
 import { Copy, TableProperties } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -18,6 +19,11 @@ export function Amortization() {
   const loanPayments = activeLoan ? payments.filter(p => p.loanId === activeLoan.id) : [];
   
   const [isDetailedView, setIsDetailedView] = useState(false);
+
+  const financialSummary = React.useMemo(() => {
+    if (!activeLoan) return null;
+    return LoanCalculator.calculateSummary(activeLoan, schedule, DateCalculationService.getTodayAD());
+  }, [activeLoan, schedule]);
 
   return (
     <div className="space-y-6">
@@ -141,6 +147,30 @@ export function Amortization() {
                       </TableCell>
                       <TableCell colSpan={2}></TableCell>
                     </TableRow>
+                    {financialSummary && (
+                      <>
+                        <TableRow>
+                          <TableCell colSpan={isDetailedView ? 14 : 7} className="text-right font-bold text-muted-foreground">Total Loan Value:</TableCell>
+                          <TableCell className="text-right font-bold">{financialSummary.totalLoanValue.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell colSpan={isDetailedView ? 14 : 7} className="text-right font-bold text-muted-foreground">Total Payments:</TableCell>
+                          <TableCell className="text-right font-bold">{financialSummary.totalPaymentsReceived.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell colSpan={isDetailedView ? 14 : 7} className="text-right font-bold text-muted-foreground">Interest Outstanding:</TableCell>
+                          <TableCell className="text-right font-bold text-destructive">{financialSummary.interestOutstanding.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell colSpan={isDetailedView ? 14 : 7} className="text-right font-bold text-muted-foreground">Principal Outstanding:</TableCell>
+                          <TableCell className="text-right font-bold">{financialSummary.currentPrincipal.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell colSpan={isDetailedView ? 14 : 7} className="text-right font-bold text-muted-foreground">Total Outstanding Payment:</TableCell>
+                          <TableCell className="text-right font-bold text-destructive">{financialSummary.outstandingBalance.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                        </TableRow>
+                      </>
+                    )}
                   </TableFooter>
                 )}
               </Table>
