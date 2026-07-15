@@ -25,17 +25,13 @@ export class ExportService {
       if (isDetailedView) {
         return [
           row.rowNumber,
-          row.fromDate,
           DateCalculationService.convertADtoBS(row.fromDate),
-          row.toDate,
           DateCalculationService.convertADtoBS(row.toDate),
           row.days,
           row.openingPrincipal.toFixed(2),
-          row.interestFormula,
           row.interest.toFixed(2),
           row.payment.toFixed(2),
           row.interestPaid.toFixed(2),
-          row.unpaidInterestBucket.toFixed(2),
           row.principalPaid.toFixed(2),
           row.closingPrincipal.toFixed(2),
           row.closingPrincipal.plus(row.unpaidInterestBucket).toFixed(2)
@@ -55,7 +51,7 @@ export class ExportService {
     });
 
     const head = isDetailedView 
-      ? [['No.', 'From (AD)', 'From (BS)', 'To (AD)', 'To (BS)', 'Days', 'Opening (Rs.)', 'Formula', 'Interest (Rs.)', 'Payment (Rs.)', 'Int. Paid (Rs.)', 'Unpaid Int. (Rs.)', 'Prin. Paid (Rs.)', 'Closing (Rs.)', 'Total Out. (Rs.)']]
+      ? [['No.', 'From (BS)', 'To (BS)', 'Days', 'Opening (Rs.)', 'Interest (Rs.)', 'Payment (Rs.)', 'Int. Paid (Rs.)', 'Prin. Paid (Rs.)', 'Closing (Rs.)', 'Total Out. (Rs.)']]
       : [['Date (BS)', 'Opening (Rs.)', 'Interest (Rs.)', 'Payment (Rs.)', 'Int. Paid (Rs.)', 'Prin. Paid (Rs.)', 'Closing (Rs.)', 'Total Out. (Rs.)']];
 
     autoTable(doc, {
